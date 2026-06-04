@@ -170,6 +170,17 @@ uv run tendril topic bind-runtime codex-runtime \
 uv run tendril topic clear-runtime codex-runtime
 ```
 
+M3 adds governed edge proposals between existing graph nodes:
+
+```bash
+uv run tendril propose-edge \
+  --artifact "$ARTIFACT_ID" \
+  --source <source-node-id> \
+  --target <target-node-id> \
+  --relationship supports \
+  --evidence "Short quote from the artifact."
+```
+
 ## Project Docs
 
 - [Product requirements](docs/prd.md)
@@ -180,3 +191,4 @@ uv run tendril topic clear-runtime codex-runtime
 - [Mx sequential epic goal prompt](docs/goals/mx-sequential-epic.md)
 - [Codex runtime spike](docs/codex-runtime-spike.md)
 - [Topic state](docs/topic-state.md)
+- [Edge tending](docs/edge-tending.md)

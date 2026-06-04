@@ -306,6 +306,18 @@ Verify that `tendril topic show`, `bind-runtime`, and `clear-runtime` preserve
 topic authority envelopes and persist runtime handle changes across CLI
 invocations.
 
+Run before merging M3:
+
+```bash
+uv run pytest
+uv run ruff check .
+git diff --check
+```
+
+Verify that an accepted edge proposal writes an edge with provenance, a
+rejected edge proposal leaves `graph.json` unchanged, and a duplicate topology
+proposal is rejected by proof.
+
 ## Milestone M2: Resumable Topic Thread State
 
 M2 makes built-in topics visible as persisted local records. Each topic gets a
@@ -365,3 +377,57 @@ The runtime handle persists across CLI invocations.
 
 Proposal records include a compact `runtime_ref` that points back to the
 runtime turn, thread, model, or casefile that produced the proposal.
+
+## Milestone M3: Edge Tending
+
+M3 adds governed relationship proposals between existing graph nodes. Edge
+changes are topology changes, so they require proof plus explicit human review
+before apply.
+
+### Task 14: Edge Proposal Command
+
+**Files:**
+
+- Create: `src/tendril/edges.py`
+- Modify: `src/tendril/cli.py`
+- Create: `tests/test_edges.py`
+
+**Behavior:**
+
+Expose:
+
+- `tendril propose-edge --artifact <id> --source <node-id> --target <node-id> --relationship <label> --evidence "..."`
+
+The command creates an `add_edge` proposal with source node, target node,
+relationship, evidence, and review risk.
+
+### Task 15: Edge Proof And Apply
+
+**Files:**
+
+- Modify: `src/tendril/proof.py`
+- Modify: `src/tendril/graph.py`
+- Modify: `tests/test_edges.py`
+
+**Behavior:**
+
+Proof checks ensure:
+
+- edge endpoints exist
+- exact edge topology is not duplicated
+- topology changes require human review
+
+Apply writes accepted edge proposals into `graph.json` with provenance.
+
+### Task 16: Edge Documentation
+
+**Files:**
+
+- Create: `docs/edge-tending.md`
+- Modify: `README.md`
+- Modify: `docs/implementation-plan.md`
+
+**Behavior:**
+
+Document the minimal edge schema, operator command, duplicate checks, and the
+rule that edge topology changes require explicit approval.

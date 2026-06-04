@@ -37,20 +37,12 @@ def apply_proposal(store: Store, proposal_id: str) -> dict[str, Any]:
         return {"proposal_id": proposal_id, "applied": False, "reason": "already_applied"}
 
     target = proposal["target"]
-    if proposal["action"] != "add_node":
+    if proposal["action"] == "add_edge":
+        _apply_edge(graph, proposal)
+    elif proposal["action"] == "add_node":
+        _apply_node(graph, proposal)
+    else:
         raise ApplyError(f"Unsupported proposal action: {proposal['action']}")
-
-    if not any(node.get("id") == target["id"] for node in graph["nodes"]):
-        graph["nodes"].append(
-            {
-                "id": target["id"],
-                "title": target["title"],
-                "topic_id": proposal["topic_id"],
-                "source_artifact_id": proposal["artifact_id"],
-                "proposal_id": proposal_id,
-                "created_at": utc_now(),
-            }
-        )
 
     graph["mutations"].append(
         {
@@ -67,6 +59,38 @@ def apply_proposal(store: Store, proposal_id: str) -> dict[str, Any]:
     proposal["status"] = "applied"
     store.write_record("proposals", proposal_id, proposal, overwrite=True)
     return {"proposal_id": proposal_id, "applied": True}
+
+
+def _apply_node(graph: dict[str, Any], proposal: dict[str, Any]) -> None:
+    target = proposal["target"]
+    if not any(node.get("id") == target["id"] for node in graph["nodes"]):
+        graph["nodes"].append(
+            {
+                "id": target["id"],
+                "title": target["title"],
+                "topic_id": proposal["topic_id"],
+                "source_artifact_id": proposal["artifact_id"],
+                "proposal_id": proposal["id"],
+                "created_at": utc_now(),
+            }
+        )
+
+
+def _apply_edge(graph: dict[str, Any], proposal: dict[str, Any]) -> None:
+    target = proposal["target"]
+    if not any(edge.get("id") == target["id"] for edge in graph["edges"]):
+        graph["edges"].append(
+            {
+                "id": target["id"],
+                "source_id": target["source_id"],
+                "target_id": target["target_id"],
+                "relationship": target["relationship"],
+                "topic_id": proposal["topic_id"],
+                "source_artifact_id": proposal["artifact_id"],
+                "proposal_id": proposal["id"],
+                "created_at": utc_now(),
+            }
+        )
 
 
 def _read_decision(store: Store, proposal_id: str) -> dict[str, Any]:
