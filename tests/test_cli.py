@@ -3,6 +3,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 def run_cli(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
@@ -31,6 +33,42 @@ def test_cli_help_lists_m0_commands(tmp_path: Path) -> None:
         "topic",
     ]:
         assert command in result.stdout
+
+
+def test_cli_version_is_stable(tmp_path: Path) -> None:
+    result = run_cli("--version", cwd=tmp_path)
+
+    assert result.returncode == 0
+    assert result.stdout.strip() == "tendril 0.1.0"
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ("ingest", "--help"),
+        ("propose", "--help"),
+        ("propose-edge", "--help"),
+        ("propose-meta", "--help"),
+        ("proof", "--help"),
+        ("queue", "--help"),
+        ("casefile", "--help"),
+        ("review", "--help"),
+        ("apply", "--help"),
+        ("topic", "--help"),
+        ("topic", "list", "--help"),
+        ("topic", "show", "--help"),
+        ("topic", "bind-runtime", "--help"),
+        ("topic", "clear-runtime", "--help"),
+    ],
+)
+def test_cli_help_surfaces_are_stable(
+    tmp_path: Path,
+    args: tuple[str, ...],
+) -> None:
+    result = run_cli(*args, cwd=tmp_path)
+
+    assert result.returncode == 0
+    assert result.stdout.startswith("usage: tendril")
 
 
 def test_cli_runs_full_m0_loop(tmp_path: Path) -> None:
@@ -104,3 +142,10 @@ def test_missing_required_arguments_fail_clearly(tmp_path: Path) -> None:
 
     assert result.returncode != 0
     assert "required" in result.stderr.lower()
+
+
+def test_unknown_casefile_proposal_fails_clearly(tmp_path: Path) -> None:
+    result = run_cli("casefile", "--proposal", "missing", cwd=tmp_path)
+
+    assert result.returncode == 1
+    assert result.stderr.strip() == "Unknown proposal: missing"
