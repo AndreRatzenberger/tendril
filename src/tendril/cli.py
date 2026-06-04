@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any, Sequence
 
+from tendril import __version__
 from tendril.artifacts import ingest_artifact
 from tendril.casefiles import build_casefile, list_pending_proposals
 from tendril.edges import EdgeProposalError, create_edge_proposal
@@ -58,6 +59,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="tendril",
         description="Run Tendril's local graph-change proposal loop.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"tendril {__version__}",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 

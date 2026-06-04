@@ -99,17 +99,30 @@ jobs:
           )
 
           uv run tendril proof --proposal "$PROPOSAL_ID"
+          uv run tendril queue > /tmp/tendril-queue.json
           uv run tendril review \
             --proposal "$PROPOSAL_ID" \
             --decision accept \
             --reason "sample artifact is grounded enough for M0"
           uv run tendril apply --proposal "$PROPOSAL_ID"
+          uv run tendril casefile --proposal "$PROPOSAL_ID" \
+            > /tmp/tendril-casefile.json
 
           uv run python - <<'PY'
           import json
           from pathlib import Path
 
+          queue = json.loads(Path("/tmp/tendril-queue.json").read_text())
+          casefile = json.loads(Path("/tmp/tendril-casefile.json").read_text())
           graph = json.loads(Path(".tendril/graph.json").read_text())
+          assert queue["count"] >= 1, "README demo queue did not list work"
+          assert queue["items"][0]["status"] == "pending_review"
+          assert casefile["status"] == "applied"
+          assert casefile["records"]["artifact"]["present"]
+          assert casefile["records"]["proposal"]["present"]
+          assert casefile["records"]["proof"]["present"]
+          assert casefile["records"]["decision"]["present"]
+          assert casefile["records"]["graph"]["path"] == ".tendril/graph.json"
           assert graph["nodes"], "README demo did not create a graph node"
           assert graph["mutations"], "README demo did not record a mutation"
           mutation = graph["mutations"][0]

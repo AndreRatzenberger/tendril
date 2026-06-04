@@ -215,6 +215,14 @@ uv run tendril queue
 uv run tendril casefile --proposal "$PROPOSAL_ID"
 ```
 
+M7 hardens repeated local experimentation:
+
+```bash
+uv run tendril --version
+uv run pytest
+uv run ruff check .
+```
+
 ## Project Docs
 
 - [Product requirements](docs/prd.md)
@@ -229,3 +237,4 @@ uv run tendril casefile --proposal "$PROPOSAL_ID"
 - [Proof hardening](docs/proof-hardening.md)
 - [Bounded meta layer](docs/bounded-meta-layer.md)
 - [Operator casefiles](docs/operator-casefiles.md)
+- [Release readiness](docs/release-readiness.md)

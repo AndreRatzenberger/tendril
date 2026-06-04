@@ -354,6 +354,19 @@ Verify `tendril queue` lists pending proof, review, and apply work; verify
 `tendril casefile --proposal <id>` points to artifact, proposal, proof,
 decision, and graph records without hiding the raw JSON files.
 
+Run before merging M7:
+
+```bash
+uv sync --dev --locked
+uv run pytest
+uv run ruff check .
+git diff --check
+```
+
+Verify CI covers locked sync, tests, lint, whitespace, public-safety scan, and
+the README demo with queue and casefile inspection. Verify local installation
+docs, release checklist, and public-safe example artifacts are present.
+
 ## Milestone M2: Resumable Topic Thread State
 
 M2 makes built-in topics visible as persisted local records. Each topic gets a
@@ -621,3 +634,57 @@ storing a separate casefile record.
 
 Document queue statuses, casefile record pointers, and the rule that inspection
 does not bypass proposal, proof, review, apply, or provenance.
+
+## Milestone M7: Runtime And Release Hardening
+
+M7 makes Tendril reliable enough for repeated public experimentation from a
+clean checkout.
+
+### Task 26: Stable CLI Release Surface
+
+**Files:**
+
+- Modify: `src/tendril/cli.py`
+- Modify: `tests/test_cli.py`
+
+**Behavior:**
+
+Expose `tendril --version` and pin help/error behavior for top-level commands,
+topic subcommands, and unknown casefile proposals.
+
+### Task 27: CI Release Gate
+
+**Files:**
+
+- Modify: `.github/workflows/ci.yml`
+
+**Behavior:**
+
+CI runs locked dependency sync, tests, lint, whitespace checks, public-safety
+scan, and the README demo. The demo also verifies queue and casefile inspection
+from a clean `.tendril/` store.
+
+### Task 28: Packaging And Release Docs
+
+**Files:**
+
+- Create: `docs/release-readiness.md`
+- Modify: `README.md`
+- Modify: `docs/implementation-plan.md`
+
+**Behavior:**
+
+Document local installation, verification commands, CI expectations, live
+runtime skip behavior, public-safety checks, and the release checklist.
+
+### Task 29: Public-Safe Example Artifacts
+
+**Files:**
+
+- Create: `examples/artifacts/governed-edge-maintenance.md`
+- Create: `examples/artifacts/meta-proof-policy.md`
+
+**Behavior:**
+
+Provide a small public-safe artifact set for content, edge, and meta-proposal
+experiments without adding private source captures.
