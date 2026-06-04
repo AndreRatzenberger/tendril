@@ -181,6 +181,14 @@ uv run tendril propose-edge \
   --evidence "Short quote from the artifact."
 ```
 
+M4 hardens deterministic proof output with policy snapshots, source-grounding
+checks, schema validation, and compact casefile summaries:
+
+```bash
+uv run tendril proof --proposal "$PROPOSAL_ID"
+cat .tendril/proof-policy.json
+```
+
 ## Project Docs
 
 - [Product requirements](docs/prd.md)
@@ -192,3 +200,4 @@ uv run tendril propose-edge \
 - [Codex runtime spike](docs/codex-runtime-spike.md)
 - [Topic state](docs/topic-state.md)
 - [Edge tending](docs/edge-tending.md)
+- [Proof hardening](docs/proof-hardening.md)
