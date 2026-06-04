@@ -40,6 +40,11 @@ def validate_proposal_schema(proposal: Mapping[str, Any]) -> list[str]:
                 errors.append("target.type")
             for field in ["source_id", "target_id", "relationship"]:
                 _require_target(errors, target, field)
+        elif action == "meta_change":
+            if target_type != "meta_change":
+                errors.append("target.type")
+            for field in ["change_type", "target", "title"]:
+                _require_target(errors, target, field)
 
     evidence = proposal.get("evidence")
     if evidence and (

@@ -330,6 +330,18 @@ Verify that malformed proposals, unsupported actions, ungrounded evidence,
 weak rationale, unresolved contradictions, and duplicates produce legible
 rejections with policy and casefile output.
 
+Run before merging M5:
+
+```bash
+uv run pytest
+uv run ruff check .
+git diff --check
+```
+
+Verify that meta proposals require expected benefit, evidence, blast radius,
+rollback path, and human review, and that accepted meta proposals record an
+accepted meta-change without mutating graph topology or proof policy files.
+
 ## Milestone M2: Resumable Topic Thread State
 
 M2 makes built-in topics visible as persisted local records. Each topic gets a
@@ -490,3 +502,56 @@ clear warnings.
 Proof results include a compact casefile summary with proposal ID, artifact ID,
 topic ID, action, target ID, evidence count, verdict, warnings, required
 decision, and proof policy reference.
+
+## Milestone M5: Bounded Meta Layer
+
+M5 lets Tendril propose changes to its own tending process while keeping
+authority changes explicit and reviewable.
+
+### Task 20: Meta Proposal Command
+
+**Files:**
+
+- Create: `src/tendril/meta.py`
+- Modify: `src/tendril/cli.py`
+- Create: `tests/test_meta.py`
+
+**Behavior:**
+
+Expose:
+
+- `tendril propose-meta --artifact <id> --change-type <type> --target <target> --expected-benefit "..." --evidence "..." --blast-radius "..." --rollback-path "..."`
+
+The command creates a high-risk `meta_change` proposal with evidence, expected
+benefit, blast radius, rollback path, and `authority_change: true`.
+
+### Task 21: Meta Proof And Apply
+
+**Files:**
+
+- Modify: `src/tendril/proof.py`
+- Modify: `src/tendril/proof_policy.py`
+- Modify: `src/tendril/proposal_schema.py`
+- Modify: `src/tendril/graph.py`
+- Modify: `src/tendril/store.py`
+- Create: `tests/test_meta.py`
+
+**Behavior:**
+
+Proof rejects under-specified meta proposals and holds authority changes for
+human review. Applying an accepted meta proposal records it in
+`.tendril/meta_changes/` without mutating graph topology or proof policy files.
+
+### Task 22: Meta Layer Documentation
+
+**Files:**
+
+- Create: `docs/bounded-meta-layer.md`
+- Modify: `README.md`
+- Modify: `docs/implementation-plan.md`
+
+**Behavior:**
+
+Document what meta proposals can suggest, what they cannot silently mutate, and
+why accepted meta proposals are implementation instructions rather than
+authority changes.

@@ -22,6 +22,7 @@ def test_cli_help_lists_m0_commands(tmp_path: Path) -> None:
         "ingest",
         "propose",
         "propose-edge",
+        "propose-meta",
         "proof",
         "review",
         "apply",

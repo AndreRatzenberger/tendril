@@ -9,7 +9,7 @@ from tendril.store import Store
 DEFAULT_PROOF_POLICY: dict[str, Any] = {
     "id": "default-proof-policy",
     "version": "m4-1",
-    "allowed_actions": ["add_node", "add_edge"],
+    "allowed_actions": ["add_node", "add_edge", "meta_change"],
     "allowed_risk_tiers": ["low", "review", "high"],
     "min_rationale_chars": 24,
     "source_grounding": {
