@@ -293,3 +293,75 @@ git diff --check
 ```
 
 If live Codex runtime tests exist, they must be opt-in and skipped by default.
+
+Run before merging M2:
+
+```bash
+uv run pytest
+uv run ruff check .
+git diff --check
+```
+
+Verify that `tendril topic show`, `bind-runtime`, and `clear-runtime` preserve
+topic authority envelopes and persist runtime handle changes across CLI
+invocations.
+
+## Milestone M2: Resumable Topic Thread State
+
+M2 makes built-in topics visible as persisted local records. Each topic gets a
+runtime handle field and an authority envelope so future Codex threads can be
+attached to graph objects without hiding their permissions or resumability
+state.
+
+### Task 11: Topic Records
+
+**Files:**
+
+- Create: `src/tendril/topic_state.py`
+- Modify: `src/tendril/store.py`
+- Create: `tests/test_topic_state.py`
+
+**Behavior:**
+
+Initialize topic records in `.tendril/topics/` with:
+
+- `id`
+- `title`
+- `description`
+- `scope`
+- `keywords`
+- `authority_envelope`
+- `runtime`
+- timestamps
+
+### Task 12: Topic Runtime Handle CLI
+
+**Files:**
+
+- Modify: `src/tendril/cli.py`
+- Modify: `README.md`
+- Create: `docs/topic-state.md`
+
+**Behavior:**
+
+Expose:
+
+- `tendril topic list`
+- `tendril topic show <topic-id>`
+- `tendril topic bind-runtime <topic-id> --runtime <name> --thread-id <id>`
+- `tendril topic clear-runtime <topic-id>`
+
+The runtime handle persists across CLI invocations.
+
+### Task 13: Proposal Runtime References
+
+**Files:**
+
+- Modify: `src/tendril/proposals.py`
+- Modify: `src/tendril/runtime/fake.py`
+- Modify: `tests/test_proposals.py`
+
+**Behavior:**
+
+Proposal records include a compact `runtime_ref` that points back to the
+runtime turn, thread, model, or casefile that produced the proposal.

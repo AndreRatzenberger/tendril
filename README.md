@@ -159,6 +159,17 @@ optional Python Codex SDK and authenticating Codex:
 uv run tendril propose --artifact "$ARTIFACT_ID" --runtime codex
 ```
 
+M2 adds persisted topic state:
+
+```bash
+uv run tendril topic show codex-runtime
+uv run tendril topic bind-runtime codex-runtime \
+  --runtime codex \
+  --thread-id thr_123 \
+  --model gpt-5.4
+uv run tendril topic clear-runtime codex-runtime
+```
+
 ## Project Docs
 
 - [Product requirements](docs/prd.md)
@@ -168,3 +179,4 @@ uv run tendril propose --artifact "$ARTIFACT_ID" --runtime codex
 - [M0 goal prompt](docs/goals/m0-perfect-loop.md)
 - [Mx sequential epic goal prompt](docs/goals/mx-sequential-epic.md)
 - [Codex runtime spike](docs/codex-runtime-spike.md)
+- [Topic state](docs/topic-state.md)

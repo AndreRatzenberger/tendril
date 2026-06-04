@@ -47,6 +47,7 @@ def create_proposals(
             "risk_tier": runtime_proposal["risk_tier"],
             "status": runtime_proposal["status"],
             "runtime": batch["runtime"],
+            "runtime_ref": _runtime_ref(batch["runtime"]),
         }
         _validate_proposal(proposal)
         store.write_record("proposals", proposal_id, proposal)
@@ -74,3 +75,19 @@ def _validate_proposal(proposal: dict[str, Any]) -> None:
 
 def _slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
+
+def _runtime_ref(runtime: dict[str, Any]) -> dict[str, str]:
+    ref = {
+        "runtime_name": str(runtime["name"]),
+        "runtime_kind": str(runtime["kind"]),
+    }
+    for source, target in [
+        ("thread_id", "thread_id"),
+        ("turn_id", "turn_id"),
+        ("casefile_id", "casefile_id"),
+        ("model", "model"),
+    ]:
+        if runtime.get(source):
+            ref[target] = str(runtime[source])
+    return ref
