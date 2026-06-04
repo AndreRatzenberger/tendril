@@ -163,7 +163,14 @@ def test_cli_ingests_research_digest(tmp_path: Path) -> None:
     assert artifact["research"]["query"].startswith("latest merger news")
     assert artifact["research"]["sources"][0]["url"] == "https://example.com/news"
 
-    propose = run_cli("propose", "--artifact", payload["artifact_id"], cwd=tmp_path)
+    propose = run_cli(
+        "propose",
+        "--artifact",
+        payload["artifact_id"],
+        "--runtime",
+        "fake",
+        cwd=tmp_path,
+    )
     assert propose.returncode == 0, propose.stderr
     proposal_id = json.loads(propose.stdout)["proposal_ids"][0]
 

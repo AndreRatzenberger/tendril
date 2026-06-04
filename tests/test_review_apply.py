@@ -15,7 +15,7 @@ def test_accepted_proposal_updates_graph_with_provenance(tmp_path: Path) -> None
     artifact_path.write_text("Codex proof approval evidence.", encoding="utf-8")
     store = Store(tmp_path / ".tendril")
     artifact = ingest_artifact(store, artifact_path)
-    proposal = create_proposals(store, artifact["id"])[0]
+    proposal = create_proposals(store, artifact["id"], runtime_name="fake")[0]
     run_proof(store, proposal["id"])
     record_review(store, proposal["id"], "accept", "grounded enough")
 
@@ -33,7 +33,7 @@ def test_rejected_proposal_does_not_update_graph(tmp_path: Path) -> None:
     artifact_path.write_text("Codex proof approval evidence.", encoding="utf-8")
     store = Store(tmp_path / ".tendril")
     artifact = ingest_artifact(store, artifact_path)
-    proposal = create_proposals(store, artifact["id"])[0]
+    proposal = create_proposals(store, artifact["id"], runtime_name="fake")[0]
     run_proof(store, proposal["id"])
     record_review(store, proposal["id"], "reject", "too broad")
 
@@ -48,7 +48,7 @@ def test_applying_without_proof_fails(tmp_path: Path) -> None:
     artifact_path.write_text("Codex proof approval evidence.", encoding="utf-8")
     store = Store(tmp_path / ".tendril")
     artifact = ingest_artifact(store, artifact_path)
-    proposal = create_proposals(store, artifact["id"])[0]
+    proposal = create_proposals(store, artifact["id"], runtime_name="fake")[0]
     record_review(store, proposal["id"], "accept", "grounded enough")
 
     with pytest.raises(ApplyError, match="requires proof"):
@@ -60,7 +60,7 @@ def test_applying_twice_is_idempotent(tmp_path: Path) -> None:
     artifact_path.write_text("Codex proof approval evidence.", encoding="utf-8")
     store = Store(tmp_path / ".tendril")
     artifact = ingest_artifact(store, artifact_path)
-    proposal = create_proposals(store, artifact["id"])[0]
+    proposal = create_proposals(store, artifact["id"], runtime_name="fake")[0]
     run_proof(store, proposal["id"])
     record_review(store, proposal["id"], "accept", "grounded enough")
 

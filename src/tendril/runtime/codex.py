@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
 from typing import Any
 
 from tendril.runtime.base import ProposalRequest, TendrilRuntimeError
@@ -67,21 +71,48 @@ class CodexRuntime:
         self.model = model
 
     def create_proposals(self, request: ProposalRequest) -> dict[str, Any]:
-        Codex, Sandbox = _load_openai_codex()
+        codex_bin = _load_codex_cli()
         prompt = self.build_prompt(request)
 
-        with Codex() as codex:
-            sandbox = getattr(Sandbox, "read_only")
-            thread = codex.thread_start(model=self.model, sandbox=sandbox)
-            result = thread.run(prompt)
+        with tempfile.TemporaryDirectory(prefix="tendril-codex-") as temp_dir:
+            temp_path = Path(temp_dir)
+            schema_path = temp_path / "proposal-schema.json"
+            response_path = temp_path / "response.json"
+            schema_path.write_text(
+                json.dumps(CODEX_PROPOSAL_SCHEMA, indent=2, sort_keys=True),
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [
+                    codex_bin,
+                    "exec",
+                    "--model",
+                    self.model,
+                    "--sandbox",
+                    "read-only",
+                    "--skip-git-repo-check",
+                    "--output-schema",
+                    str(schema_path),
+                    "--output-last-message",
+                    str(response_path),
+                    "-",
+                ],
+                input=prompt,
+                text=True,
+                capture_output=True,
+                check=False,
+            )
+            if result.returncode != 0:
+                detail = result.stderr.strip() or result.stdout.strip()
+                raise TendrilRuntimeError(f"Codex CLI runtime failed: {detail}")
+            response = response_path.read_text(encoding="utf-8")
 
-        parsed = self.parse_response(str(result.final_response))
+        parsed = self.parse_response(response)
         return {
             "runtime": {
                 "name": self.name,
-                "kind": "openai-codex-python-sdk",
+                "kind": "codex-cli",
                 "model": self.model,
-                "thread_id": _thread_id(thread),
             },
             "proposals": parsed["proposals"],
         }
@@ -141,19 +172,11 @@ class CodexRuntime:
         return data
 
 
-def _load_openai_codex() -> tuple[Any, Any]:
-    try:
-        from openai_codex import Codex, Sandbox
-    except ImportError as exc:
-        raise TendrilRuntimeError(
-            "Codex runtime requires the optional Python SDK: pip install openai-codex"
-        ) from exc
-    return Codex, Sandbox
-
-
-def _thread_id(thread: Any) -> str:
-    value = getattr(thread, "id", None) or getattr(thread, "thread_id", "")
-    return str(value)
+def _load_codex_cli() -> str:
+    codex_bin = shutil.which("codex")
+    if not codex_bin:
+        raise TendrilRuntimeError("Codex runtime requires the codex CLI on PATH")
+    return codex_bin
 
 
 def _strip_markdown_fence(text: str) -> str:

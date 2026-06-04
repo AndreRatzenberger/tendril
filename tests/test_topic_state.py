@@ -49,7 +49,7 @@ def test_topic_runtime_binding_survives_store_reopen(tmp_path: Path) -> None:
     reopened = read_topic_record(Store(tmp_path / ".tendril"), "codex-runtime")
 
     assert bound["runtime"]["name"] == "codex"
-    assert bound["runtime"]["kind"] == "openai-codex-python-sdk"
+    assert bound["runtime"]["kind"] == "codex-cli"
     assert reopened["runtime"]["thread_id"] == "thr_123"
     assert reopened["runtime"]["model"] == "gpt-5.4"
     assert reopened["authority_envelope"]["requires_review"] is True

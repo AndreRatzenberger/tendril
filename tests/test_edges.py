@@ -196,7 +196,7 @@ def _applied_node(store: Store, tmp_path: Path, content: str) -> str:
     artifact_path = tmp_path / f"{digest}.md"
     artifact_path.write_text(content, encoding="utf-8")
     artifact = ingest_artifact(store, artifact_path)
-    proposal = create_proposals(store, artifact["id"])[0]
+    proposal = create_proposals(store, artifact["id"], runtime_name="fake")[0]
     run_proof(store, proposal["id"])
     record_review(store, proposal["id"], "accept", "node is grounded")
     apply_proposal(store, proposal["id"])

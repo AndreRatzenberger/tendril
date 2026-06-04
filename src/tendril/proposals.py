@@ -18,7 +18,7 @@ def create_proposals(
     store: Store,
     artifact_id: str,
     *,
-    runtime_name: str = "fake",
+    runtime_name: str = "codex",
 ) -> list[dict[str, Any]]:
     try:
         artifact = store.read_record("artifacts", artifact_id)

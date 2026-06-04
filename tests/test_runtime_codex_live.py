@@ -1,5 +1,5 @@
-import os
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -14,8 +14,8 @@ from tendril.topics import get_topic
 
 
 pytestmark = pytest.mark.skipif(
-    os.environ.get("TENDRIL_LIVE_CODEX") != "1",
-    reason="live Codex runtime smoke test is opt-in",
+    shutil.which("codex") is None,
+    reason="live Codex runtime smoke test requires the codex CLI",
 )
 
 

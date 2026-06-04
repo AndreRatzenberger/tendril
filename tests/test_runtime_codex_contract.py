@@ -1,4 +1,5 @@
 import json
+import subprocess
 
 import pytest
 
@@ -59,3 +60,64 @@ def test_codex_response_parser_rejects_empty_proposal_batch() -> None:
 
     with pytest.raises(TendrilRuntimeError, match="at least one proposal"):
         runtime.parse_response('{"proposals": []}')
+
+
+def test_codex_runtime_invokes_codex_cli(
+    tmp_path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    artifact = {
+        "id": "art_123",
+        "content": "Codex topic agents should produce grounded graph proposals.",
+        "path": "example.md",
+    }
+    topic = get_topic("codex-runtime")
+    response = {
+        "proposals": [
+            {
+                "topic_id": "codex-runtime",
+                "action": "add_node",
+                "target": {
+                    "type": "node",
+                    "id": "node_art_123_codex-runtime",
+                    "title": "Codex runtime note",
+                },
+                "rationale": "The artifact discusses Codex runtime state.",
+                "evidence": [{"artifact_id": "art_123", "quote": "Codex runtime"}],
+                "risk_tier": "review",
+                "status": "proposed",
+            }
+        ]
+    }
+    calls = []
+
+    def fake_run(command, *, input, text, capture_output, check):
+        calls.append(
+            {
+                "command": command,
+                "input": input,
+                "text": text,
+                "capture_output": capture_output,
+                "check": check,
+            }
+        )
+        response_path = command[command.index("--output-last-message") + 1]
+        with open(response_path, "w", encoding="utf-8") as handle:
+            json.dump(response, handle)
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr("tendril.runtime.codex.shutil.which", lambda name: "/bin/codex")
+    monkeypatch.setattr("tendril.runtime.codex.subprocess.run", fake_run)
+    monkeypatch.chdir(tmp_path)
+
+    batch = CodexRuntime(model="gpt-5.4").create_proposals(
+        ProposalRequest(artifact=artifact, topics=[topic])
+    )
+
+    command = calls[0]["command"]
+    assert command[:2] == ["/bin/codex", "exec"]
+    assert "--output-schema" in command
+    assert "--output-last-message" in command
+    assert calls[0]["input"]
+    assert batch["runtime"]["kind"] == "codex-cli"
+    assert batch["proposals"] == response["proposals"]
