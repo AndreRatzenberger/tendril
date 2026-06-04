@@ -121,8 +121,12 @@ deferred. The point is to prove the graph-change acceptance surface first.
 
 ### Run The Demo
 
+Tendril is a Codex demo. The real proposal path expects the `codex` CLI to be
+installed, authenticated, and available on `PATH`.
+
 ```bash
 uv sync --dev
+codex --version
 rm -rf .tendril
 
 ARTIFACT_ID=$(
@@ -161,15 +165,21 @@ The digest becomes a normal artifact. It still has to pass through proposal,
 proof, review, apply, and casefile inspection before anything reaches the
 graph.
 
-M1 adds a runtime boundary to proposal generation. The default runtime remains
-deterministic:
+M1 adds a runtime boundary to proposal generation. The default runtime is the
+live Codex runtime through `codex exec`:
+
+```bash
+uv run tendril propose --artifact "$ARTIFACT_ID"
+```
+
+The deterministic runtime still exists as an explicit test double for CI and
+repeatable local checks:
 
 ```bash
 uv run tendril propose --artifact "$ARTIFACT_ID" --runtime fake
 ```
 
-An opt-in Codex runtime exists for local experiments after installing the
-optional Python Codex SDK and authenticating Codex:
+You can also name the Codex runtime explicitly:
 
 ```bash
 uv run tendril propose --artifact "$ARTIFACT_ID" --runtime codex

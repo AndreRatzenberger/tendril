@@ -10,8 +10,8 @@ proposal generation in M1.
 adds Codex-backed topic-agent turns while preserving the same proposal, proof,
 review, and apply surfaces.
 
-**Tech Stack:** Python 3.10+, `uv`, local JSON files, optional Codex SDK or
-app-server integration after M0.
+**Tech Stack:** Python 3.10+, `uv`, local JSON files, and Codex CLI/SDK
+integration after M0.
 
 ---
 
@@ -226,9 +226,9 @@ Document the M0 loop with copy-pasteable commands and a sample artifact.
 
 ## Milestone M1: Codex-Backed Topic Agent
 
-M1 starts by introducing a runtime adapter boundary. The fake runtime remains
-the default so tests and demos stay deterministic. The Codex runtime is opt-in
-and documented in `docs/codex-runtime-spike.md`.
+M1 starts by introducing a runtime adapter boundary. The Codex runtime is the
+default real runtime. The fake runtime remains as an explicit test double so
+tests and CI can stay deterministic when they need to.
 
 ### Task 9: Runtime Adapter Boundary
 
@@ -265,13 +265,15 @@ Document whether the first Codex-backed runtime should use:
 - app-server JSON-RPC directly
 - `codex exec` as a temporary bridge
 
-Implementation should be behind a clear boundary and skipped in tests unless
-Codex credentials are available.
+Implementation should be behind a clear boundary. Contract tests must not
+require live Codex calls. Live runtime tests should run automatically when a
+usable `codex` CLI is present.
 
 **Tests:**
 
 - contract tests validate request and response shape without live Codex calls.
-- live smoke test is opt-in.
+- live smoke test runs on Codex-ready machines and skips only when `codex` is
+  unavailable.
 
 ## Verification
 
@@ -292,7 +294,8 @@ uv run ruff check .
 git diff --check
 ```
 
-If live Codex runtime tests exist, they must be opt-in and skipped by default.
+If live Codex runtime tests exist, they should run on Codex-ready machines and
+skip only when the `codex` command is unavailable.
 
 Run before merging M2:
 

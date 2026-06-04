@@ -14,7 +14,7 @@ from tendril.store import Store
 def test_run_proof_persists_policy_snapshot_and_casefile(tmp_path: Path) -> None:
     store = Store(tmp_path / ".tendril")
     artifact = _artifact(store, tmp_path, "Codex proof evidence.")
-    proposal = create_proposals(store, artifact["id"])[0]
+    proposal = create_proposals(store, artifact["id"], runtime_name="fake")[0]
 
     proof = run_proof(store, proposal["id"])
     policy = read_proof_policy(store)

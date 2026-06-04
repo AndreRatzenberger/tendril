@@ -54,7 +54,7 @@ def test_rejected_proposal_is_not_pending(tmp_path: Path) -> None:
 def test_casefile_points_to_raw_records_after_apply(tmp_path: Path) -> None:
     store = Store(tmp_path / ".tendril")
     artifact = _artifact(store, tmp_path, "Proof casefile evidence.")
-    proposal = create_proposals(store, artifact["id"])[0]
+    proposal = create_proposals(store, artifact["id"], runtime_name="fake")[0]
     run_proof(store, proposal["id"])
     record_review(store, proposal["id"], "accept", "grounded enough")
     apply_proposal(store, proposal["id"])
@@ -97,7 +97,7 @@ def test_cli_can_list_queue_and_show_casefile(tmp_path: Path) -> None:
 
 def _proposal(store: Store, tmp_path: Path, content: str) -> dict[str, Any]:
     artifact = _artifact(store, tmp_path, content)
-    return create_proposals(store, artifact["id"])[0]
+    return create_proposals(store, artifact["id"], runtime_name="fake")[0]
 
 
 def _artifact(store: Store, tmp_path: Path, content: str) -> dict[str, Any]:

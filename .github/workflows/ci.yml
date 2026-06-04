@@ -94,7 +94,7 @@ jobs:
           )
 
           PROPOSAL_ID=$(
-            uv run tendril propose --artifact "$ARTIFACT_ID" \
+            uv run tendril propose --artifact "$ARTIFACT_ID" --runtime fake \
               | uv run python -c 'import json, sys; print(json.load(sys.stdin)["proposal_ids"][0])'
           )
 

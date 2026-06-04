@@ -8,8 +8,9 @@ Tendril milestones, but it must be executed as a sequence of reviewable slices.
 ```text
 Execute Tendril's post-M0 roadmap from docs/goals/mx-sequential-epic.md.
 Complete M1, then M2, then each later Mx in order. Preserve the M0
-proposal-proof-review-apply loop, keep live Codex calls opt-in, and stop at
-each milestone gate for verification, docs, and review.
+proposal-proof-review-apply loop, make Codex the default real runtime, keep
+fake explicit for deterministic gates, and stop at each milestone gate for
+verification, docs, and review.
 ```
 
 ## Full Goal Prompt
@@ -70,8 +71,9 @@ documented, public-safe, and reviewable.
 - Keep the repository public-safe.
 - Do not add local continuity vaults, private source maps, secrets, chat
   transcripts, or local machine paths.
-- Keep deterministic behavior as the default path.
-- Keep live Codex runtime calls opt-in and skipped in default tests.
+- Keep Codex as the default real proposal runtime.
+- Keep deterministic behavior available through an explicit fake runtime for
+  CI, contract tests, and reproducible debugging.
 - Keep all graph mutations behind proposal, proof, review, and provenance.
 - Never silently apply topology, authority, proof-policy, polling, or runtime
   changes.
@@ -88,13 +90,14 @@ tests deterministic.
 Deliver:
 
 - `src/tendril/runtime/base.py` with a proposal-generation interface.
-- `src/tendril/runtime/fake.py` as the default deterministic runtime.
-- `src/tendril/runtime/codex.py` as an opt-in Codex runtime adapter.
+- `src/tendril/runtime/fake.py` as an explicit deterministic test double.
+- `src/tendril/runtime/codex.py` as the default Codex runtime adapter.
 - A structured proposal response contract.
 - A Codex runtime spike doc that explains which public Codex surface is used.
 - CLI support for selecting the runtime.
 - Contract tests that do not require credentials.
-- An opt-in live smoke test only if live runtime credentials are available.
+- A live smoke test that runs on Codex-ready machines and skips only when
+  `codex` is unavailable.
 
 M1 is complete when a fake runtime and a live-capable Codex adapter can produce
 the same proposal shape, and every proposal still flows through proof, review,
@@ -203,14 +206,13 @@ Deliver:
 - Locked dependency behavior.
 - CI coverage for unit tests, lint, whitespace checks, public-safety scan, and
   README demo.
-- Optional live runtime checks that are skipped by default.
+- Live runtime checks that run on Codex-ready machines.
 - Packaging docs for local installation.
 - A release-readiness checklist.
 - A small set of public-safe example artifacts.
 
 M7 is complete when a clean checkout can install, test, run the demo, inspect
-casefiles, and optionally try the live runtime path without changing default
-test assumptions.
+casefiles, and run the live runtime path on machines that have Codex ready.
 
 ## Later Mx Milestones
 
@@ -246,7 +248,8 @@ Run a public-safety scan before publishing any milestone. The scan should check
 for local machine paths, secrets, continuity vault names, private capture
 references, and accidental chat/session material.
 
-Live Codex runtime tests, if present, must be opt-in and skipped by default.
+Live Codex runtime tests, if present, should run on Codex-ready machines and
+skip only when the `codex` command is unavailable.
 
 ## Stop Conditions
 

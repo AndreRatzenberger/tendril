@@ -103,7 +103,7 @@ def build_parser() -> argparse.ArgumentParser:
     propose.add_argument(
         "--runtime",
         choices=RUNTIME_CHOICES,
-        default="fake",
+        default="codex",
         help="proposal runtime to use",
     )
     propose.set_defaults(func=_cmd_propose)

@@ -2,12 +2,15 @@
 
 ## Decision
 
-M1 uses a Python runtime boundary inside Tendril and keeps the default runtime
-deterministic.
+Tendril is Codex-first.
 
-The live-capable adapter targets the Python Codex SDK through an optional
-`openai_codex` import. Default tests do not install the SDK, do not require
-credentials, and do not make live Codex calls.
+The real proposal runtime uses the installed `codex` CLI through
+`codex exec`. A clone with `uv` and an authenticated `codex` command can run
+the demo without discovering environment flags or alternate commands.
+
+The deterministic `fake` runtime remains as an explicit test double for CI,
+contract tests, and local debugging where live model calls would be the wrong
+tool.
 
 ## Official Docs Checked
 
@@ -17,22 +20,18 @@ Checked on 2026-06-04:
 - <https://developers.openai.com/codex/app-server>
 - <https://developers.openai.com/codex/noninteractive>
 
-The Codex SDK page now documents both TypeScript and Python libraries. The
-Python SDK controls the local Codex app-server over JSON-RPC, requires Python
-3.10 or later, and is installed as `openai-codex`.
+The deeper Tendril thesis still points at Codex SDK and app-server concepts:
+bounded threads, resumable work, approvals, and event inspection attached to
+graph objects.
 
-The app-server docs describe the deeper product-integration surface: JSON-RPC
-transport, conversation history, approvals, and streamed agent events. Tendril
-should use app-server concepts later when topic state, casefiles, and a richer
-inspection surface need first-class event lifecycles.
+For the current M1 runtime, `codex exec` is the right bridge. It is already the
+automation surface a Codex-ready developer has locally, supports structured
+output with `--output-schema`, and avoids making Tendril depend on an
+unavailable Python package wheel.
 
-Non-interactive `codex exec` remains useful for scripts, CI, and structured
-pipeline output, but it is not the M1 runtime target because Tendril needs
-bounded topic work that can later become resumable graph-object state.
+## Runtime Shape
 
-## M1 Runtime Shape
-
-M1 introduces a proposal runtime contract:
+The proposal contract is shared by both runtimes:
 
 ```text
 artifact + selected topics
@@ -63,75 +62,74 @@ time, runtime metadata, proof, review, and graph mutation.
 
 ## Runtime Choices
 
-### `fake`
-
-The default runtime is deterministic and credential-free. It preserves M0
-behavior while exercising the same contract the live runtime uses.
-
-Use it for:
-
-- tests
-- README demos
-- local development
-- CI
-
 ### `codex`
 
-The Codex runtime is opt-in.
+This is the default runtime.
 
-It builds a bounded prompt for the selected artifact and topics, starts a Codex
-thread with the Python SDK, and parses the final response as the same proposal
-batch shape used by the fake runtime.
+It builds a bounded prompt for the selected artifact and topics, calls
+`codex exec` with a JSON schema, reads the last Codex message, validates the
+proposal batch, and stores proposals in the same reviewable Tendril envelope as
+every other graph change.
 
 Use it for:
 
+- the real demo
 - live local experiments
-- contract smoke tests
-- later topic-agent work
+- Codex topic-agent behavior
+- runtime smoke tests on Codex-ready machines
 
-Do not use it in default CI yet.
+### `fake`
+
+This is an explicit deterministic test double.
+
+Use it for:
+
+- CI
+- unit tests
+- reproducible local debugging
+- examples where the proposal content itself is not under test
 
 ## Operator Commands
 
-Default deterministic proposal generation:
+Default Codex proposal generation:
 
 ```bash
 uv run tendril propose --artifact <artifact-id>
 ```
 
-Explicit fake runtime:
-
-```bash
-uv run tendril propose --artifact <artifact-id> --runtime fake
-```
-
-Live Codex runtime, after installing the optional SDK and authenticating Codex:
+Explicit Codex runtime:
 
 ```bash
 uv run tendril propose --artifact <artifact-id> --runtime codex
 ```
 
-Opt-in live smoke test:
+Explicit deterministic test double:
 
 ```bash
-TENDRIL_LIVE_CODEX=1 uv run pytest tests/test_runtime_codex_live.py
+uv run tendril propose --artifact <artifact-id> --runtime fake
 ```
 
-That live test file now covers both:
+Live smoke test on a Codex-ready machine:
+
+```bash
+uv run pytest tests/test_runtime_codex_live.py
+```
+
+That live test file covers both:
 
 - direct `CodexRuntime().create_proposals(...)` adapter behavior
-- the operator CLI path through `tendril propose --runtime codex`, followed by
+- the operator CLI path through `tendril propose`, followed by
   `tendril proof --proposal <id>`
 
-The live test expects the optional Python SDK to be installed and authenticated.
-If `TENDRIL_LIVE_CODEX=1` is set without a working `openai-codex` environment,
-the test should fail rather than silently falling back to the fake runtime.
+If the `codex` CLI is unavailable, the live smoke test is skipped. If `codex`
+is present but not actually usable, the test should fail rather than silently
+falling back to `fake`.
 
 ## Safety Rules
 
-- The fake runtime remains the default.
-- The Codex runtime is selected explicitly.
-- Live tests are skipped unless `TENDRIL_LIVE_CODEX=1`.
+- The Codex runtime is the default real runtime.
+- The fake runtime must be selected explicitly.
+- Public CI uses `--runtime fake` where deterministic behavior is required.
 - The Codex adapter can only create proposals.
 - Proof, review, and apply remain unchanged after runtime proposal generation.
 - A Codex-generated proposal is not a graph mutation.
@@ -139,7 +137,7 @@ the test should fail rather than silently falling back to the fake runtime.
 
 ## M2 Handoff
 
-M1 does not persist resumable topic thread state yet.
+M1 does not resume live Codex threads automatically yet.
 
 M2 should extend topic records with visible runtime metadata and authority
 envelopes, then decide which Codex thread identifiers are safe and useful to

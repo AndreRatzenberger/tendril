@@ -105,5 +105,5 @@ def _empty_runtime() -> dict[str, None]:
 
 def _runtime_kind(runtime_name: str) -> str:
     if runtime_name == "codex":
-        return "openai-codex-python-sdk"
+        return "codex-cli"
     return "deterministic"
