@@ -117,6 +117,16 @@ Opt-in live smoke test:
 TENDRIL_LIVE_CODEX=1 uv run pytest tests/test_runtime_codex_live.py
 ```
 
+That live test file now covers both:
+
+- direct `CodexRuntime().create_proposals(...)` adapter behavior
+- the operator CLI path through `tendril propose --runtime codex`, followed by
+  `tendril proof --proposal <id>`
+
+The live test expects the optional Python SDK to be installed and authenticated.
+If `TENDRIL_LIVE_CODEX=1` is set without a working `openai-codex` environment,
+the test should fail rather than silently falling back to the fake runtime.
+
 ## Safety Rules
 
 - The fake runtime remains the default.
