@@ -152,3 +152,4 @@ cat .tendril/graph.json
 - [Decisions](docs/decisions.md)
 - [Implementation plan](docs/implementation-plan.md)
 - [M0 goal prompt](docs/goals/m0-perfect-loop.md)
+- [Mx sequential epic goal prompt](docs/goals/mx-sequential-epic.md)
