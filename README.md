@@ -1,157 +1,147 @@
+<p align="center">
+  <img alt="Tendril Banner" src="docs/assets/tendril-banner.png" width="800">
+</p>
+
+<p align="center">
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
+  <a href="https://github.com/openai/codex"><img src="https://img.shields.io/badge/runtime-Codex%20CLI-7c3aed.svg" alt="Runtime: Codex CLI"></a>
+  <a href="https://github.com/astral-sh/uv"><img src="https://img.shields.io/badge/package%20manager-uv-000000.svg" alt="Package manager: uv"></a>
+  <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/badge/code%20style-ruff-000000.svg" alt="Code style: ruff"></a>
+  <a href="https://github.com/AndreRatzenberger/tendril"><img src="https://img.shields.io/badge/tests-74%20passed-brightgreen.svg" alt="Tests"></a>
+</p>
+
+<p align="center">
+  <em>"Let the graph tend itself."</em>
+</p>
+
 # Tendril
 
-**An autonomous knowledge graph built with the Codex SDK.**
+**A Codex SDK playground for self-tending knowledge graphs.**
 
-When people hear "Codex SDK" or "Copilot SDK", they often think of a nice way
-to start the bot. Perhaps in places where it was difficult so far. And that's
-it.
+Most Codex demos answer the polite little question:
 
-In my opinion, these agent jumpstarters will become the center of a completely
-different kind of software.
+> "How do I start an agent from code?"
 
-Meet **Tendril**: an autonomous knowledge graph implemented just with the Codex
-SDK.
+Tendril is poking at the weirder question:
 
-## The Shape
+> "What if an agent thread is application state attached to a graph object?"
 
-Tendril is a self-tending knowledge graph where graph objects carry bounded,
-resumable agent work.
+A new artifact arrives. A topic wakes up. Codex proposes a graph change. Proof
+checks try to be boring. A human approves or rejects. Only then does the graph
+mutate, with provenance attached like a tiny audit trail with opinions.
 
-Instead of a human or one central pipeline deciding where every new note,
-source, claim, or connection belongs, Tendril treats the graph itself as a set
-of active semantic objects:
+Think: **knowledge graph + Codex threads + proof gates + operator review**.
+Small for now. Suspiciously expandable later.
 
-- topic agents listen for new artifacts relevant to their branch
-- edge agents propose or maintain relationships between topics
-- proof agents check whether proposed growth is grounded and useful
-- meta agents watch the system's own behavior and propose improvements
+---
 
-The graph is not just queried. It reacts.
+## ✨ Codex SDK Intro
 
-## The Three Layers
+The interesting part of the Codex SDK is not "spawn a chatbot, but from your
+app." Useful, yes. World-endingly interesting, no.
 
-### 1. Living Graph Layer
+The fun part is that Codex threads can become bounded software state:
 
-New information is published into the graph as an artifact. Relevant topic
-agents decide whether to ignore it, reference it, distill it, connect it, or
-ask another agent to inspect it.
+- resumable work attached to a topic, edge, policy, or artifact
+- scoped authority instead of one giant agent blob
+- inspectable turns, tool calls, approvals, and outcomes
+- reviewable proposals before mutation
+- durable evidence for why the graph changed
 
-The graph grows through local custodians rather than one giant global rulebook.
+Tendril's first runnable version uses the installed `codex` CLI through
+`codex exec`, because that is what a Codex-ready clone already has. The deeper
+architecture is pointed at Codex SDK and app-server concepts once graph objects
+need richer thread lifecycles.
 
-### 2. Proof Layer
+> The Codex SDK is not just an automation interface for coding tasks. It is a
+> runtime for bounded, resumable, inspectable agency. Tendril explores what
+> happens when that agency is attached to domain objects instead of chat
+> sessions.
 
-Autonomy needs an immune system.
+The thesis:
 
-Tendril's proof layer checks for the unglamorous but crucial things:
+> Future apps will not just have agents bolted on. Some software objects will
+> carry their own bounded agent work.
 
-- source grounding
-- duplicate claims
-- hallucinated links
-- weak evidence
-- topology drift
-- graph bloat
-- contradictions
-- authority-boundary violations
+A knowledge graph is a nice little stress test because it already has topics,
+links, evidence, contradictions, authority boundaries, and endless temptation to
+grow into nonsense. Perfect laboratory. Slightly cursed. Very educational.
 
-The living layer gets to be imaginative. The proof layer gets to be boring.
-That is the point.
+---
 
-### 3. Bounded Meta Layer
+## 🚀 Idiot Quickstart
 
-Tendril can also observe how its own tending process behaves.
+You need:
 
-For example:
+- `uv`
+- an authenticated `codex` CLI on `PATH`
 
-> "The news source checked every 15 minutes almost never produces useful new
-> information. Polling hourly would reduce noise without losing signal."
-
-Or:
-
-> "This topic agent keeps proposing duplicate edges. Its acceptance check should
-> be tightened."
-
-The meta layer does not silently rewrite the system. It proposes changes with
-evidence. A human can approve them. Then Codex can implement the change, run the
-checks, and attach the implementation casefile.
-
-## Why Codex SDK Matters
-
-The interesting part is not "start Codex from code".
-
-The interesting part is that Codex threads can become application state:
-
-- resumable work attached to a graph object
-- scoped sandbox and authority
-- inspectable events and tool calls
-- approval points
-- implementation and review turns
-- durable evidence for why a change happened
-
-That makes Codex less like a chatbot and more like a programmable autonomy
-primitive.
-
-## Project Thesis
-
-Tendril explores the idea that future software will not be purely deterministic
-applications with agents bolted on. Some software objects will become bounded,
-active, self-tending participants in their own operation.
-
-A knowledge graph is a perfect first test because it naturally has branches,
-topics, links, evidence, contradictions, and growth pressure.
-
-Tendril asks:
-
-> What if each branch of a knowledge graph could tend itself, prove its changes,
-> and improve its own tending process over time?
-
-## M0 Local Loop
-
-The first milestone is a local, deterministic version of the smallest useful
-Tendril loop:
-
-1. publish a new artifact
-2. wake relevant topic agents
-3. generate proposed graph changes
-4. run proof checks
-5. ask for human approval on meaningful changes
-6. write accepted changes with provenance
-
-In M0, the topic agent is deterministic and Codex integration is deliberately
-deferred. The point is to prove the graph-change acceptance surface first.
-
-### Run The Demo
-
-Tendril is a Codex demo. The real proposal path expects the `codex` CLI to be
-installed, authenticated, and available on `PATH`.
+Then:
 
 ```bash
 uv sync --dev
 codex --version
 rm -rf .tendril
+```
 
+**1. Ingest a source artifact**
+
+```bash
 ARTIFACT_ID=$(
   uv run tendril ingest examples/artifacts/codex-thread-state.md \
     | uv run python -c 'import json, sys; print(json.load(sys.stdin)["artifact_id"])'
 )
+```
 
+**2. Let Codex propose graph changes**
+
+```bash
 PROPOSAL_ID=$(
   uv run tendril propose --artifact "$ARTIFACT_ID" \
     | uv run python -c 'import json, sys; print(json.load(sys.stdin)["proposal_ids"][0])'
 )
+```
 
+**3. Run proof, inspect the queue, approve, apply**
+
+```bash
 uv run tendril proof --proposal "$PROPOSAL_ID"
 uv run tendril queue
 uv run tendril review \
   --proposal "$PROPOSAL_ID" \
   --decision accept \
-  --reason "sample artifact is grounded enough for M0"
+  --reason "sample artifact is grounded enough for the demo"
 uv run tendril apply --proposal "$PROPOSAL_ID"
+```
 
+**4. Look at the receipts**
+
+```bash
 uv run tendril casefile --proposal "$PROPOSAL_ID"
 cat .tendril/graph.json
 ```
 
-You can also ingest a sourced research digest instead of a local file:
+What just happened?
+
+- **Ingest** stored a source artifact in `.tendril/artifacts/`.
+- **Codex** proposed graph growth from that artifact.
+- **Proof** checked boring things like evidence, duplicates, and schema shape.
+- **Review** recorded a human decision.
+- **Apply** mutated `graph.json` only after the proposal survived the gate.
+- **Casefile** pointed back to the raw artifact, proposal, proof, decision, and
+  graph mutation records.
+
+No silent graph mutation. No mystery meat autonomy. The tendrils have paperwork.
+
+> Tip: CI and deterministic local debugging can use `--runtime fake`. The real
+> default is Codex.
+
+---
+
+## 🧪 Research Digest Ingest
+
+Tendril can also ingest a sourced research digest. The research can happen
+outside Tendril; the result enters the same proof/review/apply loop.
 
 ```bash
 uv run tendril ingest \
@@ -161,31 +151,97 @@ uv run tendril ingest \
   --caveat "Terms may change before closing."
 ```
 
-The digest becomes a normal artifact. It still has to pass through proposal,
-proof, review, apply, and casefile inspection before anything reaches the
-graph.
+That digest becomes a normal artifact. Codex may propose graph changes from it,
+but the graph still does not change until proof and review say so.
 
-M1 adds a runtime boundary to proposal generation. The default runtime is the
-live Codex runtime through `codex exec`:
+---
+
+## 🧠 The Loop
+
+```text
+artifact published
+-> relevant topic wakes
+-> Codex creates graph-change proposal
+-> proof checks run
+-> human accepts or rejects
+-> accepted change is written with provenance
+-> casefile explains what happened
+```
+
+The current store is intentionally boring:
+
+```text
+.tendril/
+  artifacts/
+  proposals/
+  proofs/
+  decisions/
+  topics/
+  graph.json
+  proof-policy.json
+```
+
+Plain files are not glamorous. They are inspectable. Inspectable wins.
+
+---
+
+## 🌿 The Three Layers
+
+### 1. Living Graph Layer
+
+Topics and edges act like tiny custodians. A new artifact arrives, relevant
+topics wake up, and Codex proposes what should be added, connected, ignored, or
+reviewed.
+
+The graph is not just queried. It reacts.
+
+### 2. Proof Layer
+
+Autonomy needs an immune system.
+
+Tendril checks for source grounding, duplicate claims, weak evidence,
+hallucinated links, topology drift, graph bloat, contradictions, and authority
+boundary weirdness.
+
+The living layer gets to be imaginative. The proof layer gets to be boring.
+This is the correct division of labor.
+
+### 3. Bounded Meta Layer
+
+Tendril can propose improvements to its own tending process:
+
+> "This source barely produces useful changes. Poll it less often."
+
+or:
+
+> "This topic keeps proposing duplicate edges. Tighten its proof policy."
+
+But it does not silently rewrite itself. Meta changes are proposals too, with
+evidence, blast radius, rollback path, proof, and human approval.
+
+---
+
+## 🛠️ Runtime Notes
+
+Default proposal generation uses Codex:
 
 ```bash
 uv run tendril propose --artifact "$ARTIFACT_ID"
 ```
 
-The deterministic runtime still exists as an explicit test double for CI and
-repeatable local checks:
-
-```bash
-uv run tendril propose --artifact "$ARTIFACT_ID" --runtime fake
-```
-
-You can also name the Codex runtime explicitly:
+Name it explicitly if you like being very clear:
 
 ```bash
 uv run tendril propose --artifact "$ARTIFACT_ID" --runtime codex
 ```
 
-M2 adds persisted topic state:
+Use the deterministic test double when you want repeatability:
+
+```bash
+uv run tendril propose --artifact "$ARTIFACT_ID" --runtime fake
+```
+
+Topic runtime handles are inspectable:
 
 ```bash
 uv run tendril topic show codex-runtime
@@ -196,65 +252,33 @@ uv run tendril topic bind-runtime codex-runtime \
 uv run tendril topic clear-runtime codex-runtime
 ```
 
-M3 adds governed edge proposals between existing graph nodes:
+---
 
-```bash
-uv run tendril propose-edge \
-  --artifact "$ARTIFACT_ID" \
-  --source <source-node-id> \
-  --target <target-node-id> \
-  --relationship supports \
-  --evidence "Short quote from the artifact."
-```
+## 🧭 What Exists Today
 
-M4 hardens deterministic proof output with policy snapshots, source-grounding
-checks, schema validation, and compact casefile summaries:
+Tendril currently has:
 
-```bash
-uv run tendril proof --proposal "$PROPOSAL_ID"
-cat .tendril/proof-policy.json
-```
+- artifact ingest
+- Codex-backed proposal generation
+- deterministic fake runtime for tests and CI
+- persisted topic state
+- governed edge proposals
+- proof policy snapshots and schema checks
+- bounded meta proposals
+- operator queue and casefiles
+- release hardening with CI, Ruff, and README demo coverage
+- research digest ingest
 
-M5 adds bounded meta proposals. They can suggest changes to proof policy,
-runtime behavior, prompts, polling, or schema, but accepted meta proposals are
-recorded as reviewable instructions rather than silently mutating authority:
+Still tiny. Already enough to show the shape.
 
-```bash
-uv run tendril propose-meta \
-  --artifact "$ARTIFACT_ID" \
-  --change-type proof_policy \
-  --target default-proof-policy \
-  --expected-benefit "Reject noisy proposals before review." \
-  --evidence "Short quote from the artifact." \
-  --blast-radius "Affects proof decisions for all proposals." \
-  --rollback-path "Restore the previous proof policy file."
-```
+---
 
-M6 adds operator inspection. The queue shows proposals that still need proof,
-review, or apply. A casefile summarizes the full chain while pointing back to
-the raw JSON records:
-
-```bash
-uv run tendril queue
-uv run tendril casefile --proposal "$PROPOSAL_ID"
-```
-
-M7 hardens repeated local experimentation:
-
-```bash
-uv run tendril --version
-uv run pytest
-uv run ruff check .
-```
-
-## Project Docs
+## 📚 Project Docs
 
 - [Product requirements](docs/prd.md)
 - [Architecture](docs/architecture.md)
 - [Decisions](docs/decisions.md)
 - [Implementation plan](docs/implementation-plan.md)
-- [M0 goal prompt](docs/goals/m0-perfect-loop.md)
-- [Mx sequential epic goal prompt](docs/goals/mx-sequential-epic.md)
 - [Codex runtime spike](docs/codex-runtime-spike.md)
 - [Topic state](docs/topic-state.md)
 - [Edge tending](docs/edge-tending.md)
@@ -263,3 +287,20 @@ uv run ruff check .
 - [Operator casefiles](docs/operator-casefiles.md)
 - [Release readiness](docs/release-readiness.md)
 - [Research digest ingest](docs/research-digest-ingest.md)
+- [M0 goal prompt](docs/goals/m0-perfect-loop.md)
+- [Mx sequential epic goal prompt](docs/goals/mx-sequential-epic.md)
+
+---
+
+## 🧹 Verification
+
+```bash
+uv sync --dev --locked
+uv run pytest
+uv run ruff check .
+git diff --check
+```
+
+If `codex` is available, the live Codex runtime smoke test runs as part of the
+suite. If not, that live smoke skips; deterministic tests still exercise the
+proposal contract through `fake`.
