@@ -145,6 +145,20 @@ uv run tendril apply --proposal "$PROPOSAL_ID"
 cat .tendril/graph.json
 ```
 
+M1 adds a runtime boundary to proposal generation. The default runtime remains
+deterministic:
+
+```bash
+uv run tendril propose --artifact "$ARTIFACT_ID" --runtime fake
+```
+
+An opt-in Codex runtime exists for local experiments after installing the
+optional Python Codex SDK and authenticating Codex:
+
+```bash
+uv run tendril propose --artifact "$ARTIFACT_ID" --runtime codex
+```
+
 ## Project Docs
 
 - [Product requirements](docs/prd.md)
@@ -153,3 +167,4 @@ cat .tendril/graph.json
 - [Implementation plan](docs/implementation-plan.md)
 - [M0 goal prompt](docs/goals/m0-perfect-loop.md)
 - [Mx sequential epic goal prompt](docs/goals/mx-sequential-epic.md)
+- [Codex runtime spike](docs/codex-runtime-spike.md)

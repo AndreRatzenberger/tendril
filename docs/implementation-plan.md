@@ -226,6 +226,10 @@ Document the M0 loop with copy-pasteable commands and a sample artifact.
 
 ## Milestone M1: Codex-Backed Topic Agent
 
+M1 starts by introducing a runtime adapter boundary. The fake runtime remains
+the default so tests and demos stay deterministic. The Codex runtime is opt-in
+and documented in `docs/codex-runtime-spike.md`.
+
 ### Task 9: Runtime Adapter Boundary
 
 **Files:**

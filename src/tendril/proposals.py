@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from tendril.runtime import get_runtime
+from tendril.runtime.base import ProposalRequest, validate_runtime_batch
 from tendril.store import RecordNotFoundError, Store
 from tendril.time import utc_now
 from tendril.topics import get_topic
@@ -12,36 +14,39 @@ class ProposalValidationError(Exception):
     """Raised when a graph-change proposal cannot be created."""
 
 
-def create_proposals(store: Store, artifact_id: str) -> list[dict[str, Any]]:
+def create_proposals(
+    store: Store,
+    artifact_id: str,
+    *,
+    runtime_name: str = "fake",
+) -> list[dict[str, Any]]:
     try:
         artifact = store.read_record("artifacts", artifact_id)
     except RecordNotFoundError as exc:
         raise ProposalValidationError(f"Unknown artifact: {artifact_id}") from exc
 
-    proposals = []
     topic_ids = artifact.get("extracted_topics") or ["bounded-autonomy-software"]
-    for topic_id in topic_ids:
-        topic = get_topic(str(topic_id))
+    topics = [get_topic(str(topic_id)) for topic_id in topic_ids]
+    runtime = get_runtime(runtime_name)
+    batch = runtime.create_proposals(ProposalRequest(artifact=artifact, topics=topics))
+    validate_runtime_batch(batch, allowed_topic_ids={topic.id for topic in topics})
+
+    proposals = []
+    for runtime_proposal in batch["proposals"]:
+        topic = get_topic(str(runtime_proposal["topic_id"]))
         proposal_id = f"prop_{artifact_id}_{_slug(topic.id)}"
-        evidence = _evidence_from_artifact(artifact)
         proposal: dict[str, Any] = {
             "id": proposal_id,
             "artifact_id": artifact_id,
             "topic_id": topic.id,
             "created_at": utc_now(),
-            "action": "add_node",
-            "target": {
-                "type": "node",
-                "id": f"node_{artifact_id}_{_slug(topic.id)}",
-                "title": f"{topic.title} note from {artifact_id}",
-            },
-            "rationale": (
-                f"The artifact appears relevant to {topic.title}: "
-                f"{topic.description}"
-            ),
-            "evidence": evidence,
-            "risk_tier": "review",
-            "status": "proposed",
+            "action": runtime_proposal["action"],
+            "target": runtime_proposal["target"],
+            "rationale": runtime_proposal["rationale"],
+            "evidence": runtime_proposal["evidence"],
+            "risk_tier": runtime_proposal["risk_tier"],
+            "status": runtime_proposal["status"],
+            "runtime": batch["runtime"],
         }
         _validate_proposal(proposal)
         store.write_record("proposals", proposal_id, proposal)
@@ -65,19 +70,6 @@ def _validate_proposal(proposal: dict[str, Any]) -> None:
     missing = [field for field in required if not proposal.get(field)]
     if missing:
         raise ProposalValidationError(f"Malformed proposal missing: {missing}")
-
-
-def _evidence_from_artifact(artifact: dict[str, Any]) -> list[dict[str, str]]:
-    content = str(artifact.get("content", ""))
-    excerpt = " ".join(content.strip().split())
-    if len(excerpt) > 240:
-        excerpt = excerpt[:237].rstrip() + "..."
-    return [
-        {
-            "artifact_id": str(artifact["id"]),
-            "quote": excerpt,
-        }
-    ]
 
 
 def _slug(value: str) -> str:

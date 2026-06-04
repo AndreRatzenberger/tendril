@@ -33,9 +33,19 @@ def test_cli_runs_full_m0_loop(tmp_path: Path) -> None:
     assert ingest.returncode == 0, ingest.stderr
     artifact_id = json.loads(ingest.stdout)["artifact_id"]
 
-    propose = run_cli("propose", "--artifact", artifact_id, cwd=tmp_path)
+    propose = run_cli(
+        "propose",
+        "--artifact",
+        artifact_id,
+        "--runtime",
+        "fake",
+        cwd=tmp_path,
+    )
     assert propose.returncode == 0, propose.stderr
-    proposal_id = json.loads(propose.stdout)["proposal_ids"][0]
+    propose_payload = json.loads(propose.stdout)
+    proposal_id = propose_payload["proposal_ids"][0]
+    assert propose_payload["runtime"] == "fake"
+    assert propose_payload["proposals"][0]["runtime"]["name"] == "fake"
 
     proof = run_cli("proof", "--proposal", proposal_id, cwd=tmp_path)
     assert proof.returncode == 0, proof.stderr
