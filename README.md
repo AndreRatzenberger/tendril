@@ -122,3 +122,4 @@ Codex-backed autonomous KG loop:
 - [Architecture](docs/architecture.md)
 - [Decisions](docs/decisions.md)
 - [Implementation plan](docs/implementation-plan.md)
+- [M0 goal prompt](docs/goals/m0-perfect-loop.md)
