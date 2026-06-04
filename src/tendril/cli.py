@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from tendril.artifacts import ingest_artifact
+from tendril.casefiles import build_casefile, list_pending_proposals
 from tendril.edges import EdgeProposalError, create_edge_proposal
 from tendril.graph import ApplyError, apply_proposal
 from tendril.meta import MetaProposalError, create_meta_proposal
@@ -118,6 +119,16 @@ def build_parser() -> argparse.ArgumentParser:
     proof.add_argument("--proposal", required=True, help="proposal ID")
     proof.set_defaults(func=_cmd_proof)
 
+    queue = subparsers.add_parser("queue", help="list pending proposals")
+    queue.set_defaults(func=_cmd_queue)
+
+    casefile = subparsers.add_parser(
+        "casefile",
+        help="show an operator casefile for a proposal",
+    )
+    casefile.add_argument("--proposal", required=True, help="proposal ID")
+    casefile.set_defaults(func=_cmd_casefile)
+
     review = subparsers.add_parser("review", help="record a review decision")
     review.add_argument("--proposal", required=True, help="proposal ID")
     review.add_argument("--decision", required=True, choices=["accept", "reject"])
@@ -201,6 +212,14 @@ def _cmd_propose_meta(args: argparse.Namespace, store: Store) -> dict[str, Any]:
 
 def _cmd_proof(args: argparse.Namespace, store: Store) -> dict[str, Any]:
     return run_proof(store, args.proposal)
+
+
+def _cmd_queue(args: argparse.Namespace, store: Store) -> dict[str, Any]:
+    return list_pending_proposals(store)
+
+
+def _cmd_casefile(args: argparse.Namespace, store: Store) -> dict[str, Any]:
+    return build_casefile(store, args.proposal)
 
 
 def _cmd_review(args: argparse.Namespace, store: Store) -> dict[str, Any]:

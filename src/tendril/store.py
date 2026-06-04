@@ -63,6 +63,13 @@ class Store:
             raise RecordNotFoundError(f"Unknown {collection.rstrip('s')}: {record_id}")
         return json.loads(path.read_text(encoding="utf-8"))
 
+    def list_records(self, collection: str) -> list[dict[str, Any]]:
+        self.initialize()
+        records = []
+        for path in sorted((self.root / collection).glob("*.json")):
+            records.append(json.loads(path.read_text(encoding="utf-8")))
+        return records
+
     def record_exists(self, collection: str, record_id: str) -> bool:
         return self.record_path(collection, record_id).exists()
 
