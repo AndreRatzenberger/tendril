@@ -9,6 +9,7 @@ from typing import Any, Sequence
 from tendril.artifacts import ingest_artifact
 from tendril.edges import EdgeProposalError, create_edge_proposal
 from tendril.graph import ApplyError, apply_proposal
+from tendril.meta import MetaProposalError, create_meta_proposal
 from tendril.proof import ProofError, run_proof
 from tendril.proposals import ProposalValidationError, create_proposals
 from tendril.review import ReviewError, record_review
@@ -36,6 +37,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         DuplicateRecordError,
         EdgeProposalError,
         FileNotFoundError,
+        MetaProposalError,
         ProofError,
         ProposalValidationError,
         RecordNotFoundError,
@@ -82,6 +84,35 @@ def build_parser() -> argparse.ArgumentParser:
     propose_edge.add_argument("--relationship", required=True, help="edge label")
     propose_edge.add_argument("--evidence", required=True, help="artifact evidence")
     propose_edge.set_defaults(func=_cmd_propose_edge)
+
+    propose_meta = subparsers.add_parser(
+        "propose-meta",
+        help="create a bounded meta-change proposal",
+    )
+    propose_meta.add_argument("--artifact", required=True, help="artifact ID")
+    propose_meta.add_argument(
+        "--change-type",
+        required=True,
+        help="kind of system change being proposed",
+    )
+    propose_meta.add_argument("--target", required=True, help="change target")
+    propose_meta.add_argument(
+        "--expected-benefit",
+        required=True,
+        help="expected benefit of the meta change",
+    )
+    propose_meta.add_argument("--evidence", required=True, help="artifact evidence")
+    propose_meta.add_argument(
+        "--blast-radius",
+        required=True,
+        help="affected behavior or authority surface",
+    )
+    propose_meta.add_argument(
+        "--rollback-path",
+        required=True,
+        help="how to undo or park the change",
+    )
+    propose_meta.set_defaults(func=_cmd_propose_meta)
 
     proof = subparsers.add_parser("proof", help="run proof checks for a proposal")
     proof.add_argument("--proposal", required=True, help="proposal ID")
@@ -150,6 +181,20 @@ def _cmd_propose_edge(args: argparse.Namespace, store: Store) -> dict[str, Any]:
         target_id=args.target,
         relationship=args.relationship,
         evidence_quote=args.evidence,
+    )
+    return {"proposal_id": proposal["id"], "proposal": proposal}
+
+
+def _cmd_propose_meta(args: argparse.Namespace, store: Store) -> dict[str, Any]:
+    proposal = create_meta_proposal(
+        store,
+        args.artifact,
+        change_type=args.change_type,
+        target=args.target,
+        expected_benefit=args.expected_benefit,
+        evidence_quote=args.evidence,
+        blast_radius=args.blast_radius,
+        rollback_path=args.rollback_path,
     )
     return {"proposal_id": proposal["id"], "proposal": proposal}
 

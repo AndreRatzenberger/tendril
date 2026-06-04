@@ -29,11 +29,11 @@ def apply_proposal(store: Store, proposal_id: str) -> dict[str, Any]:
         if decision.get("decision") != "accept":
             raise ApplyError(f"Proposal is not accepted: {proposal_id}")
 
+    if proposal["action"] == "meta_change":
+        return _apply_meta_change(store, proposal_id, proposal)
+
     graph = store.read_graph()
-    if any(
-        mutation.get("proposal_id") == proposal_id
-        for mutation in graph.get("mutations", [])
-    ):
+    if _already_applied(graph, proposal_id):
         return {"proposal_id": proposal_id, "applied": False, "reason": "already_applied"}
 
     target = proposal["target"]
@@ -91,6 +91,39 @@ def _apply_edge(graph: dict[str, Any], proposal: dict[str, Any]) -> None:
                 "created_at": utc_now(),
             }
         )
+
+
+def _apply_meta_change(
+    store: Store,
+    proposal_id: str,
+    proposal: dict[str, Any],
+) -> dict[str, Any]:
+    if store.record_exists("meta_changes", proposal_id):
+        return {"proposal_id": proposal_id, "applied": False, "reason": "already_applied"}
+
+    record = {
+        "id": proposal_id,
+        "proposal_id": proposal_id,
+        "artifact_id": proposal["artifact_id"],
+        "target": proposal["target"],
+        "expected_benefit": proposal["expected_benefit"],
+        "blast_radius": proposal["blast_radius"],
+        "rollback_path": proposal["rollback_path"],
+        "status": "accepted",
+        "recorded_at": utc_now(),
+    }
+    store.write_record("meta_changes", proposal_id, record)
+
+    proposal["status"] = "applied"
+    store.write_record("proposals", proposal_id, proposal, overwrite=True)
+    return {"proposal_id": proposal_id, "applied": True}
+
+
+def _already_applied(graph: dict[str, Any], proposal_id: str) -> bool:
+    return any(
+        mutation.get("proposal_id") == proposal_id
+        for mutation in graph.get("mutations", [])
+    )
 
 
 def _read_decision(store: Store, proposal_id: str) -> dict[str, Any]:

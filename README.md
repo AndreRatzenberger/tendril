@@ -189,6 +189,21 @@ uv run tendril proof --proposal "$PROPOSAL_ID"
 cat .tendril/proof-policy.json
 ```
 
+M5 adds bounded meta proposals. They can suggest changes to proof policy,
+runtime behavior, prompts, polling, or schema, but accepted meta proposals are
+recorded as reviewable instructions rather than silently mutating authority:
+
+```bash
+uv run tendril propose-meta \
+  --artifact "$ARTIFACT_ID" \
+  --change-type proof_policy \
+  --target default-proof-policy \
+  --expected-benefit "Reject noisy proposals before review." \
+  --evidence "Short quote from the artifact." \
+  --blast-radius "Affects proof decisions for all proposals." \
+  --rollback-path "Restore the previous proof policy file."
+```
+
 ## Project Docs
 
 - [Product requirements](docs/prd.md)
@@ -201,3 +216,4 @@ cat .tendril/proof-policy.json
 - [Topic state](docs/topic-state.md)
 - [Edge tending](docs/edge-tending.md)
 - [Proof hardening](docs/proof-hardening.md)
+- [Bounded meta layer](docs/bounded-meta-layer.md)

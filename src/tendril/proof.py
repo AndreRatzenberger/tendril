@@ -84,10 +84,22 @@ def run_proof(store: Store, proposal_id: str) -> dict[str, Any]:
                 "edge endpoint node is missing",
             )
         )
+    if proposal.get("action") == "meta_change":
+        missing_meta_fields = _missing_meta_fields(proposal)
+        checks.append(
+            _check(
+                "meta_required_fields_present",
+                not missing_meta_fields,
+                "meta proposal missing required fields",
+                detail=", ".join(missing_meta_fields),
+            )
+        )
 
     risk_tier = str(proposal.get("risk_tier", ""))
     topology_change = bool(proposal.get("topology_change"))
+    authority_change = bool(proposal.get("authority_change"))
     review_required = risk_tier in {"review", "high"} or topology_change
+    review_required = review_required or authority_change
     checks.append(
         _check(
             "review_required_for_risk",
@@ -102,6 +114,15 @@ def run_proof(store: Store, proposal_id: str) -> dict[str, Any]:
                 "review_required_for_topology_change",
                 review_required,
                 "topology changes require human review",
+                detail="human review required",
+            )
+        )
+    if authority_change:
+        checks.append(
+            _check(
+                "review_required_for_authority_change",
+                review_required,
+                "authority changes require human review",
                 detail="human review required",
             )
         )
@@ -159,6 +180,8 @@ def _target_exists(graph: dict[str, Any], proposal: dict[str, Any]) -> bool:
             )
             for edge in graph.get("edges", [])
         )
+    if proposal.get("action") == "meta_change":
+        return False
     return any(node.get("id") == target_id for node in graph.get("nodes", []))
 
 
@@ -207,6 +230,11 @@ def _rationale_is_strong_enough(
 
 def _normalize(value: str) -> str:
     return " ".join(value.split())
+
+
+def _missing_meta_fields(proposal: dict[str, Any]) -> list[str]:
+    required = ["expected_benefit", "blast_radius", "rollback_path"]
+    return [field for field in required if not str(proposal.get(field, "")).strip()]
 
 
 def _policy_snapshot(policy: dict[str, Any]) -> dict[str, Any]:

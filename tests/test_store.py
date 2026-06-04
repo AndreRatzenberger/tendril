@@ -10,7 +10,14 @@ def test_store_initialization_creates_expected_directories(tmp_path: Path) -> No
     store = Store(tmp_path / ".tendril")
     store.initialize()
 
-    for name in ["artifacts", "proposals", "proofs", "decisions", "topics"]:
+    for name in [
+        "artifacts",
+        "proposals",
+        "proofs",
+        "decisions",
+        "topics",
+        "meta_changes",
+    ]:
         assert (tmp_path / ".tendril" / name).is_dir()
     assert json.loads((tmp_path / ".tendril" / "graph.json").read_text()) == {
         "nodes": [],
