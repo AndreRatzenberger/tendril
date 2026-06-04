@@ -37,6 +37,7 @@ class FakeRuntime:
                 "name": self.name,
                 "kind": "deterministic",
                 "turn_id": f"fake-turn-{artifact['id']}",
+                "casefile_id": f"case_{artifact['id']}",
             },
             "proposals": proposals,
         }

@@ -28,6 +28,9 @@ def test_create_proposals_references_existing_artifact_and_topic(tmp_path: Path)
     assert proposal["status"] == "proposed"
     assert proposal["runtime"]["name"] == "fake"
     assert proposal["runtime"]["turn_id"] == f"fake-turn-{artifact['id']}"
+    assert proposal["runtime_ref"]["runtime_name"] == "fake"
+    assert proposal["runtime_ref"]["turn_id"] == f"fake-turn-{artifact['id']}"
+    assert proposal["runtime_ref"]["casefile_id"] == f"case_{artifact['id']}"
 
 
 def test_create_proposals_can_select_fake_runtime_explicitly(tmp_path: Path) -> None:

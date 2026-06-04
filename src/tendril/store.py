@@ -24,7 +24,7 @@ class Store:
 
     def initialize(self) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
-        for collection in ["artifacts", "proposals", "proofs", "decisions"]:
+        for collection in ["artifacts", "proposals", "proofs", "decisions", "topics"]:
             (self.root / collection).mkdir(parents=True, exist_ok=True)
         graph_path = self.root / "graph.json"
         if not graph_path.exists():

@@ -14,6 +14,13 @@ from tendril.review import ReviewError, record_review
 from tendril.runtime import RUNTIME_CHOICES
 from tendril.runtime.base import TendrilRuntimeError
 from tendril.store import DuplicateRecordError, RecordNotFoundError, Store, StoreError
+from tendril.topic_state import (
+    TopicStateError,
+    bind_topic_runtime,
+    clear_topic_runtime,
+    list_topic_records,
+    read_topic_record,
+)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -33,6 +40,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         ReviewError,
         StoreError,
         TendrilRuntimeError,
+        TopicStateError,
     ) as exc:
         print(str(exc), file=sys.stderr)
         return 1
@@ -76,6 +84,33 @@ def build_parser() -> argparse.ArgumentParser:
     apply.add_argument("--proposal", required=True, help="proposal ID")
     apply.set_defaults(func=_cmd_apply)
 
+    topic = subparsers.add_parser("topic", help="inspect and manage topic state")
+    topic_subparsers = topic.add_subparsers(dest="topic_command", required=True)
+
+    topic_list = topic_subparsers.add_parser("list", help="list topic records")
+    topic_list.set_defaults(func=_cmd_topic_list)
+
+    topic_show = topic_subparsers.add_parser("show", help="show one topic record")
+    topic_show.add_argument("topic_id", help="topic ID")
+    topic_show.set_defaults(func=_cmd_topic_show)
+
+    topic_bind = topic_subparsers.add_parser(
+        "bind-runtime",
+        help="bind or update a topic runtime handle",
+    )
+    topic_bind.add_argument("topic_id", help="topic ID")
+    topic_bind.add_argument("--runtime", required=True, choices=RUNTIME_CHOICES)
+    topic_bind.add_argument("--thread-id", required=True, help="runtime thread ID")
+    topic_bind.add_argument("--model", help="runtime model")
+    topic_bind.set_defaults(func=_cmd_topic_bind_runtime)
+
+    topic_clear = topic_subparsers.add_parser(
+        "clear-runtime",
+        help="clear a topic runtime handle",
+    )
+    topic_clear.add_argument("topic_id", help="topic ID")
+    topic_clear.set_defaults(func=_cmd_topic_clear_runtime)
+
     return parser
 
 
@@ -104,6 +139,34 @@ def _cmd_review(args: argparse.Namespace, store: Store) -> dict[str, Any]:
 
 def _cmd_apply(args: argparse.Namespace, store: Store) -> dict[str, Any]:
     return apply_proposal(store, args.proposal)
+
+
+def _cmd_topic_list(args: argparse.Namespace, store: Store) -> dict[str, Any]:
+    return {"topics": list_topic_records(store)}
+
+
+def _cmd_topic_show(args: argparse.Namespace, store: Store) -> dict[str, Any]:
+    return read_topic_record(store, args.topic_id)
+
+
+def _cmd_topic_bind_runtime(
+    args: argparse.Namespace,
+    store: Store,
+) -> dict[str, Any]:
+    return bind_topic_runtime(
+        store,
+        args.topic_id,
+        runtime_name=args.runtime,
+        thread_id=args.thread_id,
+        model=args.model,
+    )
+
+
+def _cmd_topic_clear_runtime(
+    args: argparse.Namespace,
+    store: Store,
+) -> dict[str, Any]:
+    return clear_topic_runtime(store, args.topic_id)
 
 
 if __name__ == "__main__":

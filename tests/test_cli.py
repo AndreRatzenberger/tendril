@@ -18,7 +18,7 @@ def test_cli_help_lists_m0_commands(tmp_path: Path) -> None:
     result = run_cli("--help", cwd=tmp_path)
 
     assert result.returncode == 0
-    for command in ["ingest", "propose", "proof", "review", "apply"]:
+    for command in ["ingest", "propose", "proof", "review", "apply", "topic"]:
         assert command in result.stdout
 
 
