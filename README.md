@@ -116,3 +116,9 @@ Codex-backed autonomous KG loop:
 5. ask for human approval on meaningful changes
 6. let Codex implement accepted system improvements
 
+## Project Docs
+
+- [Product requirements](docs/prd.md)
+- [Architecture](docs/architecture.md)
+- [Decisions](docs/decisions.md)
+- [Implementation plan](docs/implementation-plan.md)
