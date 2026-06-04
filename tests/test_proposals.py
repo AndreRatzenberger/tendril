@@ -26,6 +26,20 @@ def test_create_proposals_references_existing_artifact_and_topic(tmp_path: Path)
     assert proposal["evidence"]
     assert proposal["risk_tier"] == "review"
     assert proposal["status"] == "proposed"
+    assert proposal["runtime"]["name"] == "fake"
+    assert proposal["runtime"]["turn_id"] == f"fake-turn-{artifact['id']}"
+
+
+def test_create_proposals_can_select_fake_runtime_explicitly(tmp_path: Path) -> None:
+    artifact_path = tmp_path / "note.md"
+    artifact_path.write_text("Codex needs proof evidence.", encoding="utf-8")
+    store = Store(tmp_path / ".tendril")
+    artifact = ingest_artifact(store, artifact_path)
+
+    proposals = create_proposals(store, artifact["id"], runtime_name="fake")
+
+    assert proposals
+    assert {proposal["runtime"]["name"] for proposal in proposals} == {"fake"}
 
 
 def test_create_proposals_requires_existing_artifact(tmp_path: Path) -> None:

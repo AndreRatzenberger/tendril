@@ -11,6 +11,8 @@ from tendril.graph import ApplyError, apply_proposal
 from tendril.proof import ProofError, run_proof
 from tendril.proposals import ProposalValidationError, create_proposals
 from tendril.review import ReviewError, record_review
+from tendril.runtime import RUNTIME_CHOICES
+from tendril.runtime.base import TendrilRuntimeError
 from tendril.store import DuplicateRecordError, RecordNotFoundError, Store, StoreError
 
 
@@ -30,6 +32,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         RecordNotFoundError,
         ReviewError,
         StoreError,
+        TendrilRuntimeError,
     ) as exc:
         print(str(exc), file=sys.stderr)
         return 1
@@ -51,6 +54,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     propose = subparsers.add_parser("propose", help="create graph-change proposals")
     propose.add_argument("--artifact", required=True, help="artifact ID")
+    propose.add_argument(
+        "--runtime",
+        choices=RUNTIME_CHOICES,
+        default="fake",
+        help="proposal runtime to use",
+    )
     propose.set_defaults(func=_cmd_propose)
 
     proof = subparsers.add_parser("proof", help="run proof checks for a proposal")
@@ -76,9 +85,10 @@ def _cmd_ingest(args: argparse.Namespace, store: Store) -> dict[str, Any]:
 
 
 def _cmd_propose(args: argparse.Namespace, store: Store) -> dict[str, Any]:
-    proposals = create_proposals(store, args.artifact)
+    proposals = create_proposals(store, args.artifact, runtime_name=args.runtime)
     return {
         "artifact_id": args.artifact,
+        "runtime": args.runtime,
         "proposal_ids": [proposal["id"] for proposal in proposals],
         "proposals": proposals,
     }
