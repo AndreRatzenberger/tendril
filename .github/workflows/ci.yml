@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v8
+
+      - name: Install dependencies
+        run: uv sync --dev --locked
+
+      - name: Run tests
+        run: uv run pytest
+
+      - name: Run lint
+        run: uv run ruff check .
+
+      - name: Check patch hygiene
+        run: git diff --check
+
+      - name: Check public-safety strings
+        run: |
+          uv run python - <<'PY'
+          from pathlib import Path
+
+          blocked = [
+              "/" + "home" + "/" + "pyro",
+              "Cl" + "aude",
+              "cl" + "aude",
+              "Co" + "die",
+              "co" + "die",
+              "co" + "dies",
+              "." + "co" + "dies-" + "memory",
+              "mem" + "ory/",
+              "source" + "-map",
+              "Fl" + "ock",
+              "Wi" + "shful",
+              "Proof" + "room",
+              "basic" + "-memory",
+              "pri" + "vate/",
+          ]
+          skip_dirs = {".git", ".venv", ".pytest_cache", ".ruff_cache"}
+          findings = []
+
+          for path in Path(".").rglob("*"):
+              if not path.is_file():
+                  continue
+              if any(part in skip_dirs for part in path.parts):
+                  continue
+              try:
+                  text = path.read_text(encoding="utf-8")
+              except UnicodeDecodeError:
+                  continue
+              for needle in blocked:
+                  if needle in text:
+                      findings.append(f"{path}: contains {needle!r}")
+
+          if findings:
+              print("\n".join(findings))
+              raise SystemExit(1)
+          PY
+
+      - name: Run README demo
+        run: |
+          rm -rf .tendril
+
+          ARTIFACT_ID=$(
+            uv run tendril ingest examples/artifacts/codex-thread-state.md \
+              | uv run python -c 'import json, sys; print(json.load(sys.stdin)["artifact_id"])'
+          )
+
+          PROPOSAL_ID=$(
+            uv run tendril propose --artifact "$ARTIFACT_ID" \
+              | uv run python -c 'import json, sys; print(json.load(sys.stdin)["proposal_ids"][0])'
+          )
+
+          uv run tendril proof --proposal "$PROPOSAL_ID"
+          uv run tendril review \
+            --proposal "$PROPOSAL_ID" \
+            --decision accept \
+            --reason "sample artifact is grounded enough for M0"
+          uv run tendril apply --proposal "$PROPOSAL_ID"
+
+          uv run python - <<'PY'
+          import json
+          from pathlib import Path
+
+          graph = json.loads(Path(".tendril/graph.json").read_text())
+          assert graph["nodes"], "README demo did not create a graph node"
+          assert graph["mutations"], "README demo did not record a mutation"
+          mutation = graph["mutations"][0]
+          assert mutation["proposal_id"], "mutation is missing proposal provenance"
+          assert mutation["proof_id"], "mutation is missing proof provenance"
+          assert mutation["artifact_id"], "mutation is missing artifact provenance"
+          PY
+
+          rm -rf .tendril
