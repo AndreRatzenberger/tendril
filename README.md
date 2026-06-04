@@ -104,17 +104,46 @@ Tendril asks:
 > What if each branch of a knowledge graph could tend itself, prove its changes,
 > and improve its own tending process over time?
 
-## Status
+## M0 Local Loop
 
-Freshly seeded. The first goal is to prototype the smallest possible
-Codex-backed autonomous KG loop:
+The first milestone is a local, deterministic version of the smallest useful
+Tendril loop:
 
 1. publish a new artifact
 2. wake relevant topic agents
 3. generate proposed graph changes
 4. run proof checks
 5. ask for human approval on meaningful changes
-6. let Codex implement accepted system improvements
+6. write accepted changes with provenance
+
+In M0, the topic agent is deterministic and Codex integration is deliberately
+deferred. The point is to prove the graph-change acceptance surface first.
+
+### Run The Demo
+
+```bash
+uv sync --dev
+rm -rf .tendril
+
+ARTIFACT_ID=$(
+  uv run tendril ingest examples/artifacts/codex-thread-state.md \
+    | uv run python -c 'import json, sys; print(json.load(sys.stdin)["artifact_id"])'
+)
+
+PROPOSAL_ID=$(
+  uv run tendril propose --artifact "$ARTIFACT_ID" \
+    | uv run python -c 'import json, sys; print(json.load(sys.stdin)["proposal_ids"][0])'
+)
+
+uv run tendril proof --proposal "$PROPOSAL_ID"
+uv run tendril review \
+  --proposal "$PROPOSAL_ID" \
+  --decision accept \
+  --reason "sample artifact is grounded enough for M0"
+uv run tendril apply --proposal "$PROPOSAL_ID"
+
+cat .tendril/graph.json
+```
 
 ## Project Docs
 
