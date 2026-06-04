@@ -136,12 +136,14 @@ PROPOSAL_ID=$(
 )
 
 uv run tendril proof --proposal "$PROPOSAL_ID"
+uv run tendril queue
 uv run tendril review \
   --proposal "$PROPOSAL_ID" \
   --decision accept \
   --reason "sample artifact is grounded enough for M0"
 uv run tendril apply --proposal "$PROPOSAL_ID"
 
+uv run tendril casefile --proposal "$PROPOSAL_ID"
 cat .tendril/graph.json
 ```
 
@@ -204,6 +206,15 @@ uv run tendril propose-meta \
   --rollback-path "Restore the previous proof policy file."
 ```
 
+M6 adds operator inspection. The queue shows proposals that still need proof,
+review, or apply. A casefile summarizes the full chain while pointing back to
+the raw JSON records:
+
+```bash
+uv run tendril queue
+uv run tendril casefile --proposal "$PROPOSAL_ID"
+```
+
 ## Project Docs
 
 - [Product requirements](docs/prd.md)
@@ -217,3 +228,4 @@ uv run tendril propose-meta \
 - [Edge tending](docs/edge-tending.md)
 - [Proof hardening](docs/proof-hardening.md)
 - [Bounded meta layer](docs/bounded-meta-layer.md)
+- [Operator casefiles](docs/operator-casefiles.md)

@@ -24,8 +24,10 @@ def test_cli_help_lists_m0_commands(tmp_path: Path) -> None:
         "propose-edge",
         "propose-meta",
         "proof",
+        "queue",
         "review",
         "apply",
+        "casefile",
         "topic",
     ]:
         assert command in result.stdout

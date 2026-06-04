@@ -342,6 +342,18 @@ Verify that meta proposals require expected benefit, evidence, blast radius,
 rollback path, and human review, and that accepted meta proposals record an
 accepted meta-change without mutating graph topology or proof policy files.
 
+Run before merging M6:
+
+```bash
+uv run pytest
+uv run ruff check .
+git diff --check
+```
+
+Verify `tendril queue` lists pending proof, review, and apply work; verify
+`tendril casefile --proposal <id>` points to artifact, proposal, proof,
+decision, and graph records without hiding the raw JSON files.
+
 ## Milestone M2: Resumable Topic Thread State
 
 M2 makes built-in topics visible as persisted local records. Each topic gets a
@@ -555,3 +567,57 @@ human review. Applying an accepted meta proposal records it in
 Document what meta proposals can suggest, what they cannot silently mutate, and
 why accepted meta proposals are implementation instructions rather than
 authority changes.
+
+## Milestone M6: Operator Casefiles And Inspection Surface
+
+M6 makes the existing proposal-proof-review-apply chain easier to inspect
+without creating a new mutation path or hiding raw JSON records.
+
+### Task 23: Pending Proposal Queue
+
+**Files:**
+
+- Create: `src/tendril/casefiles.py`
+- Modify: `src/tendril/cli.py`
+- Modify: `src/tendril/store.py`
+- Create: `tests/test_casefiles.py`
+
+**Behavior:**
+
+Expose:
+
+- `tendril queue`
+
+The queue lists proposals waiting for proof, review, or apply. It excludes
+applied, rejected, and proof-rejected proposals.
+
+### Task 24: Operator Casefile Command
+
+**Files:**
+
+- Modify: `src/tendril/casefiles.py`
+- Modify: `src/tendril/cli.py`
+- Create: `tests/test_casefiles.py`
+
+**Behavior:**
+
+Expose:
+
+- `tendril casefile --proposal <proposal-id>`
+
+The command assembles a summary from artifact, proposal, proof, decision, graph,
+and meta-change records. It points back to raw `.tendril/` JSON paths instead of
+storing a separate casefile record.
+
+### Task 25: Operator Inspection Documentation
+
+**Files:**
+
+- Create: `docs/operator-casefiles.md`
+- Modify: `README.md`
+- Modify: `docs/implementation-plan.md`
+
+**Behavior:**
+
+Document queue statuses, casefile record pointers, and the rule that inspection
+does not bypass proposal, proof, review, apply, or provenance.
