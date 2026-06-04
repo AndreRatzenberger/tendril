@@ -47,7 +47,7 @@ def _evidence_from_artifact(artifact: Any) -> list[dict[str, str]]:
     content = str(artifact.get("content", ""))
     excerpt = " ".join(content.strip().split())
     if len(excerpt) > 240:
-        excerpt = excerpt[:237].rstrip() + "..."
+        excerpt = excerpt[:240].rstrip()
     return [
         {
             "artifact_id": str(artifact["id"]),

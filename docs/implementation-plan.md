@@ -318,6 +318,18 @@ Verify that an accepted edge proposal writes an edge with provenance, a
 rejected edge proposal leaves `graph.json` unchanged, and a duplicate topology
 proposal is rejected by proof.
 
+Run before merging M4:
+
+```bash
+uv run pytest
+uv run ruff check .
+git diff --check
+```
+
+Verify that malformed proposals, unsupported actions, ungrounded evidence,
+weak rationale, unresolved contradictions, and duplicates produce legible
+rejections with policy and casefile output.
+
 ## Milestone M2: Resumable Topic Thread State
 
 M2 makes built-in topics visible as persisted local records. Each topic gets a
@@ -431,3 +443,50 @@ Apply writes accepted edge proposals into `graph.json` with provenance.
 
 Document the minimal edge schema, operator command, duplicate checks, and the
 rule that edge topology changes require explicit approval.
+
+## Milestone M4: Proof Layer Hardening
+
+M4 strengthens deterministic proof output without making a model judgment the
+critical path.
+
+### Task 17: Proof Policy
+
+**Files:**
+
+- Create: `src/tendril/proof_policy.py`
+- Modify: `src/tendril/proof.py`
+- Create: `tests/test_proof_hardening.py`
+
+**Behavior:**
+
+Create `.tendril/proof-policy.json` on first proof run. Include policy ID,
+version, allowed actions, allowed risk tiers, rationale threshold,
+source-grounding rules, and model-assisted proof status.
+
+### Task 18: Schema And Grounding Checks
+
+**Files:**
+
+- Create: `src/tendril/proposal_schema.py`
+- Modify: `src/tendril/proof.py`
+- Create: `tests/test_proof_hardening.py`
+
+**Behavior:**
+
+Proof rejects malformed proposals, unsupported actions, ungrounded evidence
+quotes, weak rationale, unresolved contradictions, and duplicate targets with
+clear warnings.
+
+### Task 19: Proof Casefile Output
+
+**Files:**
+
+- Modify: `src/tendril/proof.py`
+- Create: `docs/proof-hardening.md`
+- Modify: `README.md`
+
+**Behavior:**
+
+Proof results include a compact casefile summary with proposal ID, artifact ID,
+topic ID, action, target ID, evidence count, verdict, warnings, required
+decision, and proof policy reference.
