@@ -7,7 +7,11 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from tendril import __version__
-from tendril.artifacts import ingest_artifact
+from tendril.artifacts import (
+    ResearchDigestError,
+    ingest_artifact,
+    ingest_research_digest,
+)
 from tendril.casefiles import build_casefile, list_pending_proposals
 from tendril.edges import EdgeProposalError, create_edge_proposal
 from tendril.graph import ApplyError, apply_proposal
@@ -42,6 +46,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         MetaProposalError,
         ProofError,
         ProposalValidationError,
+        ResearchDigestError,
         RecordNotFoundError,
         ReviewError,
         StoreError,
@@ -67,8 +72,30 @@ def build_parser() -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    ingest = subparsers.add_parser("ingest", help="ingest a markdown artifact")
-    ingest.add_argument("path", help="path to the artifact to ingest")
+    ingest = subparsers.add_parser("ingest", help="ingest an artifact")
+    ingest.add_argument("path", nargs="?", help="path to the artifact to ingest")
+    ingest.add_argument(
+        "--research-query",
+        help="research question or instruction used to create a digest artifact",
+    )
+    ingest.add_argument(
+        "--finding",
+        action="append",
+        default=[],
+        help="research finding to include in a digest; repeat for multiple findings",
+    )
+    ingest.add_argument(
+        "--source",
+        action="append",
+        default=[],
+        help="research source as title|url|published_at; repeat for multiple sources",
+    )
+    ingest.add_argument(
+        "--caveat",
+        action="append",
+        default=[],
+        help="research caveat to include in a digest; repeat for multiple caveats",
+    )
     ingest.set_defaults(func=_cmd_ingest)
 
     propose = subparsers.add_parser("propose", help="create graph-change proposals")
@@ -176,8 +203,34 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _cmd_ingest(args: argparse.Namespace, store: Store) -> dict[str, Any]:
+    if args.research_query:
+        if args.path:
+            raise ResearchDigestError(
+                "Use either a file path or --research-query, not both"
+            )
+        artifact = ingest_research_digest(
+            store,
+            query=args.research_query,
+            findings=args.finding,
+            sources=[_parse_research_source(source) for source in args.source],
+            caveats=args.caveat,
+        )
+        return {"artifact_id": artifact["id"], "artifact": artifact}
+
+    if not args.path:
+        raise ResearchDigestError("Provide either an artifact path or --research-query")
+
     artifact = ingest_artifact(store, Path(args.path))
     return {"artifact_id": artifact["id"], "artifact": artifact}
+
+
+def _parse_research_source(value: str) -> dict[str, str]:
+    parts = [part.strip() for part in value.split("|")]
+    if len(parts) != 3 or not all(parts):
+        raise ResearchDigestError(
+            "Research source must use title|url|published_at"
+        )
+    return {"title": parts[0], "url": parts[1], "published_at": parts[2]}
 
 
 def _cmd_propose(args: argparse.Namespace, store: Store) -> dict[str, Any]:

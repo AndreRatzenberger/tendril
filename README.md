@@ -147,6 +147,20 @@ uv run tendril casefile --proposal "$PROPOSAL_ID"
 cat .tendril/graph.json
 ```
 
+You can also ingest a sourced research digest instead of a local file:
+
+```bash
+uv run tendril ingest \
+  --research-query "latest merger news about ExampleCo and SampleCorp" \
+  --finding "ExampleCo agreed to acquire SampleCorp for 4.2 billion dollars." \
+  --source "ExampleCo press release|https://example.com/news|2026-06-04" \
+  --caveat "Terms may change before closing."
+```
+
+The digest becomes a normal artifact. It still has to pass through proposal,
+proof, review, apply, and casefile inspection before anything reaches the
+graph.
+
 M1 adds a runtime boundary to proposal generation. The default runtime remains
 deterministic:
 
@@ -238,3 +252,4 @@ uv run ruff check .
 - [Bounded meta layer](docs/bounded-meta-layer.md)
 - [Operator casefiles](docs/operator-casefiles.md)
 - [Release readiness](docs/release-readiness.md)
+- [Research digest ingest](docs/research-digest-ingest.md)

@@ -137,6 +137,57 @@ def test_cli_runs_full_m0_loop(tmp_path: Path) -> None:
     assert graph["mutations"][0]["proposal_id"] == proposal_id
 
 
+def test_cli_ingests_research_digest(tmp_path: Path) -> None:
+    result = run_cli(
+        "ingest",
+        "--research-query",
+        "latest merger news about ExampleCo and SampleCorp",
+        "--finding",
+        "ExampleCo agreed to acquire SampleCorp for 4.2 billion dollars.",
+        "--finding",
+        "The companies expect the merger to close after regulator review.",
+        "--source",
+        "ExampleCo press release|https://example.com/news|2026-06-04",
+        "--source",
+        "Wire report|https://example.com/wire|2026-06-04",
+        "--caveat",
+        "Terms may change before closing.",
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    artifact = payload["artifact"]
+    assert artifact["source_type"] == "research_digest"
+    assert artifact["path"] is None
+    assert artifact["research"]["query"].startswith("latest merger news")
+    assert artifact["research"]["sources"][0]["url"] == "https://example.com/news"
+
+    propose = run_cli("propose", "--artifact", payload["artifact_id"], cwd=tmp_path)
+    assert propose.returncode == 0, propose.stderr
+    proposal_id = json.loads(propose.stdout)["proposal_ids"][0]
+
+    proof = run_cli("proof", "--proposal", proposal_id, cwd=tmp_path)
+    assert proof.returncode == 0, proof.stderr
+    assert json.loads(proof.stdout)["verdict"] == "hold"
+
+
+def test_cli_research_digest_source_format_fails_clearly(tmp_path: Path) -> None:
+    result = run_cli(
+        "ingest",
+        "--research-query",
+        "latest merger news",
+        "--finding",
+        "A merger was announced.",
+        "--source",
+        "missing separators",
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 1
+    assert "Research source must use title|url|published_at" in result.stderr
+
+
 def test_missing_required_arguments_fail_clearly(tmp_path: Path) -> None:
     result = run_cli("propose", cwd=tmp_path)
 
