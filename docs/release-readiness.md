@@ -50,6 +50,15 @@ The GitHub Actions workflow checks:
 Live Codex runtime checks are skipped by default. The live smoke test should
 only run when credentials and an explicit opt-in environment are present.
 
+Run the live runtime path explicitly with:
+
+```bash
+TENDRIL_LIVE_CODEX=1 uv run pytest tests/test_runtime_codex_live.py
+```
+
+That file exercises the direct Codex adapter and the CLI path through
+`tendril propose --runtime codex`.
+
 ## Public-Safety Checklist
 
 Before publishing, confirm the diff does not include:
@@ -65,6 +74,8 @@ Before publishing, confirm the diff does not include:
 - Clean checkout can run `uv sync --dev --locked`.
 - `uv run tendril --version` prints the package version.
 - `uv run pytest` passes with live runtime tests skipped by default.
+- Optional live runtime smoke passes when `TENDRIL_LIVE_CODEX=1` and the
+  optional Codex SDK environment is configured.
 - `uv run ruff check .` passes.
 - `git diff --check` passes.
 - README demo creates a provenance-bearing graph mutation.

@@ -1,4 +1,7 @@
 import os
+import json
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -32,3 +35,49 @@ def test_live_codex_runtime_returns_proposal_contract(tmp_path: Path) -> None:
 
     validate_runtime_batch(batch, allowed_topic_ids={topic.id for topic in topics})
     assert batch["runtime"]["name"] == "codex"
+
+
+def test_live_codex_runtime_cli_loop_reaches_proof(tmp_path: Path) -> None:
+    artifact_path = tmp_path / "live-codex-artifact.md"
+    artifact_path.write_text(
+        (
+            "Codex runtime proposals should stay grounded in artifact evidence "
+            "before graph changes reach review."
+        ),
+        encoding="utf-8",
+    )
+
+    ingest = _run_cli("ingest", str(artifact_path), cwd=tmp_path)
+    assert ingest.returncode == 0, ingest.stderr
+    artifact_id = json.loads(ingest.stdout)["artifact_id"]
+
+    propose = _run_cli(
+        "propose",
+        "--artifact",
+        artifact_id,
+        "--runtime",
+        "codex",
+        cwd=tmp_path,
+    )
+    assert propose.returncode == 0, propose.stderr
+    propose_payload = json.loads(propose.stdout)
+    proposal = propose_payload["proposals"][0]
+    assert propose_payload["runtime"] == "codex"
+    assert proposal["runtime"]["name"] == "codex"
+    assert proposal["runtime_ref"]["runtime_name"] == "codex"
+
+    proof = _run_cli("proof", "--proposal", proposal["id"], cwd=tmp_path)
+    assert proof.returncode == 0, proof.stderr
+    proof_payload = json.loads(proof.stdout)
+    assert proof_payload["verdict"] in {"accept", "hold"}
+    assert proof_payload["warnings"] == []
+
+
+def _run_cli(*args: str, cwd: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "-m", "tendril.cli", *args],
+        cwd=cwd,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
