@@ -45,9 +45,18 @@ def run_proof(store: Store, proposal_id: str) -> dict[str, Any]:
             "target already exists",
         ),
     ]
+    if proposal.get("action") == "add_edge":
+        checks.append(
+            _check(
+                "edge_endpoints_exist",
+                _edge_endpoints_exist(graph, proposal),
+                "edge endpoint node is missing",
+            )
+        )
 
     risk_tier = str(proposal.get("risk_tier", ""))
-    review_required = risk_tier in {"review", "high"}
+    topology_change = bool(proposal.get("topology_change"))
+    review_required = risk_tier in {"review", "high"} or topology_change
     checks.append(
         _check(
             "review_required_for_risk",
@@ -56,6 +65,15 @@ def run_proof(store: Store, proposal_id: str) -> dict[str, Any]:
             detail="human review required" if review_required else "auto-apply allowed",
         )
     )
+    if topology_change:
+        checks.append(
+            _check(
+                "review_required_for_topology_change",
+                review_required,
+                "topology changes require human review",
+                detail="human review required",
+            )
+        )
 
     warnings = [str(check["warning"]) for check in checks if not check["passed"]]
     if warnings:
@@ -98,4 +116,22 @@ def _check(
 def _target_exists(graph: dict[str, Any], proposal: dict[str, Any]) -> bool:
     target = proposal.get("target") or {}
     target_id = target.get("id") if isinstance(target, dict) else None
+    if proposal.get("action") == "add_edge" and isinstance(target, dict):
+        return any(
+            edge.get("id") == target_id
+            or (
+                edge.get("source_id") == target.get("source_id")
+                and edge.get("target_id") == target.get("target_id")
+                and edge.get("relationship") == target.get("relationship")
+            )
+            for edge in graph.get("edges", [])
+        )
     return any(node.get("id") == target_id for node in graph.get("nodes", []))
+
+
+def _edge_endpoints_exist(graph: dict[str, Any], proposal: dict[str, Any]) -> bool:
+    target = proposal.get("target") or {}
+    if not isinstance(target, dict):
+        return False
+    node_ids = {node.get("id") for node in graph.get("nodes", [])}
+    return target.get("source_id") in node_ids and target.get("target_id") in node_ids

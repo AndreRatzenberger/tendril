@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from tendril.artifacts import ingest_artifact
+from tendril.edges import EdgeProposalError, create_edge_proposal
 from tendril.graph import ApplyError, apply_proposal
 from tendril.proof import ProofError, run_proof
 from tendril.proposals import ProposalValidationError, create_proposals
@@ -33,6 +34,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     except (
         ApplyError,
         DuplicateRecordError,
+        EdgeProposalError,
         FileNotFoundError,
         ProofError,
         ProposalValidationError,
@@ -69,6 +71,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="proposal runtime to use",
     )
     propose.set_defaults(func=_cmd_propose)
+
+    propose_edge = subparsers.add_parser(
+        "propose-edge",
+        help="create a graph edge proposal between existing nodes",
+    )
+    propose_edge.add_argument("--artifact", required=True, help="artifact ID")
+    propose_edge.add_argument("--source", required=True, help="source node ID")
+    propose_edge.add_argument("--target", required=True, help="target node ID")
+    propose_edge.add_argument("--relationship", required=True, help="edge label")
+    propose_edge.add_argument("--evidence", required=True, help="artifact evidence")
+    propose_edge.set_defaults(func=_cmd_propose_edge)
 
     proof = subparsers.add_parser("proof", help="run proof checks for a proposal")
     proof.add_argument("--proposal", required=True, help="proposal ID")
@@ -127,6 +140,18 @@ def _cmd_propose(args: argparse.Namespace, store: Store) -> dict[str, Any]:
         "proposal_ids": [proposal["id"] for proposal in proposals],
         "proposals": proposals,
     }
+
+
+def _cmd_propose_edge(args: argparse.Namespace, store: Store) -> dict[str, Any]:
+    proposal = create_edge_proposal(
+        store,
+        args.artifact,
+        source_id=args.source,
+        target_id=args.target,
+        relationship=args.relationship,
+        evidence_quote=args.evidence,
+    )
+    return {"proposal_id": proposal["id"], "proposal": proposal}
 
 
 def _cmd_proof(args: argparse.Namespace, store: Store) -> dict[str, Any]:
